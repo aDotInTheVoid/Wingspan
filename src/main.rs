@@ -8,8 +8,8 @@ const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Hello Worl
 //mod ropey_text_box;
 
 #[derive(Clone, Data, Lens)]
-struct AppState{
-    _data: String
+struct AppState {
+    _data: String,
 }
 
 pub fn main() {
@@ -19,7 +19,9 @@ pub fn main() {
         .window_size((400.0, 400.0));
 
     // create the initial app state
-    let initial_state = AppState{_data: String::with_capacity(10)};
+    let initial_state = AppState {
+        _data: String::with_capacity(10),
+    };
 
     // start the application
     AppLauncher::with_window(main_window)
