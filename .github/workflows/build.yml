@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust: [stable]
+        rust: [stable, beta, nightly]
     steps:
     - uses: hecrj/setup-rust-action@v1
       with:
@@ -27,37 +27,11 @@ jobs:
         path: ~/.cargo/git
         key: ${{ runner.os }}-cargo-index-${{ hashFiles('Cargo.lock') }}
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test
+
   
-  build-nightly:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        rust: [nightly]
-    steps:
-    - uses: hecrj/setup-rust-action@v1
-      with:
-        rust-version: ${{ matrix.rust }}
-    - uses: actions/checkout@master
-    - name: Cache cargo registry
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
-    - name: Cache cargo index
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index-${{ hashFiles('Cargo.lock') }}
-    - name: Build
-      run: cargo build --verbose
-      continue-on-error: true
-    - name: Run tests
-      run: cargo test --verbose
-      continue-on-error: true
 
   check:
     name: check (ubuntu-latest, stable)
