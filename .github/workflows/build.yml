@@ -16,6 +16,9 @@ jobs:
       with:
         rust-version: ${{ matrix.rust }}
     - uses: actions/checkout@master
+    - name: APT install
+      if: ${{ matrix.os == 'ubuntu-latest'}}
+      run: sudo dnf install pango
     - name: Cache cargo registry
       uses: actions/cache@v1
       with:
