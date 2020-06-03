@@ -1,4 +1,4 @@
-use druid::widget::{Align, Button, Flex, Label, TextBox};
+use druid::widget::{Button, Flex, Label, TextBox};
 use druid::{AppLauncher, Data, Lens, LocalizedString, Widget, WidgetExt, WindowDesc};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
@@ -38,39 +38,47 @@ fn build_root_widget() -> impl Widget<AppState> {
         .fix_width(TEXT_BOX_WIDTH)
         .lens(AppState::_data);
 
-    // arrange the two widgets vertically, with some padding
+    // Create the overall editor window
     let editor = Flex::column()
         .with_child(label)
         .with_spacer(VERTICAL_WIDGET_SPACING)
         .with_child(editor_box);
 
+    // Placeholder file tree for new
     let file_tree = Flex::column()
         .with_child(Button::new("A File"))
         .with_child(Button::new("Another FIle"));
 
+    // Probably where we list the files
     let top_bar = Flex::row()
         .with_child(Button::new("A file"))
         .with_child(Button::new("Another File"));
 
+    // Other random info, just want to be sure it's in the layout
     let bottom_bar = Flex::row()
+        .with_spacer(10.0)
         .with_child(Button::new("Some bottom button"))
-        .with_child(Button::new("Another bottom button"));
+        .with_flex_spacer(10.0)
+        .with_child(Button::new("Another bottom button"))
+        .with_spacer(10.0);
 
     let layout: Flex<AppState> = Flex::column()
-        .with_child(
-            Flex::row()
-                .with_child(file_tree)
-                .with_spacer(VERTICAL_WIDGET_SPACING)
-                .with_child(
-                    Flex::column()
-                        .with_child(top_bar)
-                        .with_spacer(VERTICAL_WIDGET_SPACING)
-                        .with_child(editor),
-                ),
+        // Top bit is flex, as it fills all space.
+        // Bottom bar is fixed width, so not flex
+        .with_flex_child(
+            // The main view has the files on the left, and the editor on the
+            // right. Files are fixed, editor is flex
+            Flex::row().with_child(file_tree).with_flex_child(
+                Flex::column()
+                    .with_child(top_bar.align_left())
+                    .with_flex_child(editor, 1.0)
+                    .expand_width(),
+                1.0,
+            ),
+            //.fix_height()
+            1.0,
         )
-        .with_spacer(VERTICAL_WIDGET_SPACING)
         .with_child(bottom_bar);
 
-    // center the two widgets in the available space
-    Align::centered(layout)
+    layout.debug_paint_layout()
 }
