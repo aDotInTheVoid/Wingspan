@@ -72,5 +72,5 @@ fn build_root_widget() -> impl Widget<AppState> {
         .with_child(bottom_bar);
 
     // center the two widgets in the available space
-    Align::centered(layout)
+    Align::centered(layout);
 }
