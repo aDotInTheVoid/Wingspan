@@ -1,7 +1,7 @@
 use druid::widget::{Align, Button, Flex, Label, TextBox};
 use druid::{AppLauncher, Data, Lens, LocalizedString, Widget, WidgetExt, WindowDesc};
 
-const VERTICAL_WIDGET_SPACING: f64 = 20.0;
+const WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 200.0;
 const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Hello World!");
 
@@ -41,7 +41,7 @@ fn build_root_widget() -> impl Widget<AppState> {
     // arrange the two widgets vertically, with some padding
     let editor = Flex::column()
         .with_child(label)
-        .with_spacer(VERTICAL_WIDGET_SPACING)
+        .with_spacer(WIDGET_SPACING)
         .with_child(editor_box);
 
     let file_tree = Flex::column()
@@ -60,15 +60,15 @@ fn build_root_widget() -> impl Widget<AppState> {
         .with_child(
             Flex::row()
                 .with_child(file_tree)
-                .with_spacer(VERTICAL_WIDGET_SPACING)
+                .with_spacer(WIDGET_SPACING)
                 .with_child(
                     Flex::column()
                         .with_child(top_bar)
-                        .with_spacer(VERTICAL_WIDGET_SPACING)
+                        .with_spacer(WIDGET_SPACING)
                         .with_child(editor),
                 ),
         )
-        .with_spacer(VERTICAL_WIDGET_SPACING)
+        .with_spacer(WIDGET_SPACING)
         .with_child(bottom_bar);
 
     // center the two widgets in the available space
