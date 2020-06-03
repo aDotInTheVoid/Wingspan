@@ -1,4 +1,6 @@
 # Wingspan
+![build](https://github.com/aDotInTheVoid/Wingspan/workflows/build/badge.svg)
+
 ![](./assets/Logo.png)
 
 Wingspan is an experimental text editor
