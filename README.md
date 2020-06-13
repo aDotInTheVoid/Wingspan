@@ -3,7 +3,14 @@
 
 ![](./assets/Logo.png)
 
-Wingspan is an experimental text editor
+Wingspan is an experimental text editor.
+It uses [druid](https://github.com/xi-editor/druid) for cross platform UI, and 
+[rust-analyzer](https://github.com/rust-analyzer/rust-analyzer) for coding assistance.
+
+
+## Status
+
+Nothing is done. You cannot even edit text.
 
 ## Licence
 
