@@ -1,0 +1,22 @@
+[package]
+name = "wingspan"
+version = "0.1.0"
+authors = ["Nixon <nixon.emoony@gmail.com>"]
+edition = "2018"
+description = "An experimental text editor"
+license = "(MIT OR Apache-2.0) AND CC-BY-SA-4.0"
+repository = "https://github.com/aDotInTheVoid/Wingspan"
+categories = ["text-editors"]
+
+
+[dependencies]
+# ra_ide = { git = "https://github.com/rust-analyzer/rust-analyzer" }
+# syntect = "4.2.0"
+# gitignore = "1.0.6"
+# eyre = "0.4.2"
+# color-eyre = "0.3.2"
+# structopt = "0.3.14"
+# ropey = "1.1.0"
+druid = "0.6.0"
+# log = "0.4.8"
+
