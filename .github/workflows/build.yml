@@ -5,99 +5,99 @@ name: build
 on: [push, pull_request]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macOS-latest]
-        rust: [stable, beta, nightly]
-    steps:
-    - uses: hecrj/setup-rust-action@v1
-      with:
-        rust-version: ${{ matrix.rust }}
-    - uses: actions/checkout@master
+#   build:
+#     runs-on: ${{ matrix.os }}
+#     strategy:
+#       matrix:
+#         os: [ubuntu-latest, windows-latest, macOS-latest]
+#         rust: [stable, beta, nightly]
+#     steps:
+#     - uses: hecrj/setup-rust-action@v1
+#       with:
+#         rust-version: ${{ matrix.rust }}
+#     - uses: actions/checkout@master
 
-    - name: install libgtk-3-dev libx11-dev
-      run: |
-        sudo apt update
-        sudo apt install libgtk-3-dev libx11-dev
-      if: contains(matrix.os, 'ubuntu')
+#     - name: install libgtk-3-dev libx11-dev
+#       run: |
+#         sudo apt update
+#         sudo apt install libgtk-3-dev libx11-dev
+#       if: contains(matrix.os, 'ubuntu')
 
-    - name: Cache cargo registry
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/registry
-        key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
-    - name: Cache cargo index
-      uses: actions/cache@v1
-      with:
-        path: ~/.cargo/git
-        key: ${{ runner.os }}-cargo-index-${{ hashFiles('Cargo.lock') }}
-    - name: Build
-      run: cargo build
-    - name: Run tests
-      run: cargo test
+#     - name: Cache cargo registry
+#       uses: actions/cache@v1
+#       with:
+#         path: ~/.cargo/registry
+#         key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
+#     - name: Cache cargo index
+#       uses: actions/cache@v1
+#       with:
+#         path: ~/.cargo/git
+#         key: ${{ runner.os }}-cargo-index-${{ hashFiles('Cargo.lock') }}
+#     - name: Build
+#       run: cargo build
+#     - name: Run tests
+#       run: cargo test
 
-  check:
-    name: check (ubuntu-latest, stable)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-      - name: install libgtk-3-dev libx11-dev
-        run: |
-          sudo apt update
-          sudo apt install libgtk-3-dev libx11-dev
-      - name: Checkout sources
-        uses: actions/checkout@v1
-      - name: Cargo Check
-        run: cargo check
+#   check:
+#     name: check (ubuntu-latest, stable)
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: hecrj/setup-rust-action@v1
+#         with:
+#           rust-version: stable
+#       - name: install libgtk-3-dev libx11-dev
+#         run: |
+#           sudo apt update
+#           sudo apt install libgtk-3-dev libx11-dev
+#       - name: Checkout sources
+#         uses: actions/checkout@v1
+#       - name: Cargo Check
+#         run: cargo check
 
-  clippy:
-    name: clippy (ubuntu-latest, stable)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-          components: clippy
-      - name: Checkout sources
-        uses: actions/checkout@v1
-      - name: install libgtk-3-dev libx11-dev
-        run: |
-          sudo apt update
-          sudo apt install libgtk-3-dev libx11-dev
-      - name: Cache cargo registry
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
-      - name: Cache cargo index
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('Cargo.lock') }}
-      - name: Cache cargo build
-        uses: actions/cache@v1
-        with:
-          path: target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('Cargo.lock') }}
-      - name: Cargo Clippy
-        run: cargo clippy -- -D warnings -A deprecated
+#   clippy:
+#     name: clippy (ubuntu-latest, stable)
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: hecrj/setup-rust-action@v1
+#         with:
+#           rust-version: stable
+#           components: clippy
+#       - name: Checkout sources
+#         uses: actions/checkout@v1
+#       - name: install libgtk-3-dev libx11-dev
+#         run: |
+#           sudo apt update
+#           sudo apt install libgtk-3-dev libx11-dev
+#       - name: Cache cargo registry
+#         uses: actions/cache@v1
+#         with:
+#           path: ~/.cargo/registry
+#           key: ${{ runner.os }}-cargo-registry-${{ hashFiles('Cargo.lock') }}
+#       - name: Cache cargo index
+#         uses: actions/cache@v1
+#         with:
+#           path: ~/.cargo/git
+#           key: ${{ runner.os }}-cargo-index-${{ hashFiles('Cargo.lock') }}
+#       - name: Cache cargo build
+#         uses: actions/cache@v1
+#         with:
+#           path: target
+#           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('Cargo.lock') }}
+#       - name: Cargo Clippy
+#         run: cargo clippy -- -D warnings -A deprecated
 
-  fmt:
-    name: fmt (ubuntu-latest, stable)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-          components: rustfmt
-      - name: Checkout sources
-        uses: actions/checkout@v1
-      - name: Check Formatting
-        run: cargo fmt --all -- --check
+#   fmt:
+#     name: fmt (ubuntu-latest, stable)
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: hecrj/setup-rust-action@v1
+#         with:
+#           rust-version: stable
+#           components: rustfmt
+#       - name: Checkout sources
+#         uses: actions/checkout@v1
+#       - name: Check Formatting
+#         run: cargo fmt --all -- --check
 
   miri:
     name: miri
