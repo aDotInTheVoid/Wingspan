@@ -38,8 +38,6 @@ jobs:
     - name: Run tests
       run: cargo test
 
-
-
   check:
     name: check (ubuntu-latest, stable)
     runs-on: ubuntu-latest
@@ -100,3 +98,19 @@ jobs:
         uses: actions/checkout@v1
       - name: Check Formatting
         run: cargo fmt --all -- --check
+
+
+  miri:
+    name: miri
+    runs-on: ubunu-latest
+
+    steps: 
+      - uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: nightly
+          components: miri
+      - name: Checkout sources
+        uses: actions/checkout@v1
+      - name: Run Miri
+        run: cargo miri test
+      
