@@ -101,7 +101,7 @@ jobs:
 
   miri:
     name: miri (ubuntu, nightly)
-    runs-on: ubunu-latest
+    runs-on: ubuntu-latest
     steps: 
       - name: checkout
         uses: actions/checkout@v1
