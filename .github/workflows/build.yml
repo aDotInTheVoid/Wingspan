@@ -98,21 +98,30 @@ jobs:
         uses: actions/checkout@v1
       - name: Check Formatting
         run: cargo fmt --all -- --check
-
   miri:
-    name: miri
-    runs-on: ubunu-latest
+    name: miri (ubuntu, nightly)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [textarea, textedit, wingspan]
     steps: 
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: rustup
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: nightly
           override: true
           components: miri
+      - name: install libgtk-3-dev libx11-dev
+        run: |
+          sudo apt update
+          sudo apt install libgtk-3-dev libx11-dev  
       - name: Run Miri
         run: |
+          cd ${{ matrix.dir }}
           cargo miri setup
           cargo miri test 
       
-      
+            
