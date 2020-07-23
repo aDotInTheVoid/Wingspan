@@ -16,7 +16,10 @@ jobs:
       with:
         rust-version: ${{ matrix.rust }}
     - uses: actions/checkout@master
-
+    - name: Remove broken apt repos [Ubuntu]
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done: 
     - name: install libgtk-3-dev libx11-dev
       run: |
         sudo apt update
@@ -38,21 +41,7 @@ jobs:
     - name: Run tests
       run: cargo test
 
-  check:
-    name: check (ubuntu-latest, stable)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-      - name: install libgtk-3-dev libx11-dev
-        run: |
-          sudo apt update
-          sudo apt install libgtk-3-dev libx11-dev
-      - name: Checkout sources
-        uses: actions/checkout@v1
-      - name: Cargo Check
-        run: cargo check
+
 
   clippy:
     name: clippy (ubuntu-latest, stable)
@@ -62,6 +51,10 @@ jobs:
         with:
           rust-version: stable
           components: clippy
+      - name: Remove broken apt repos [Ubuntu]
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done: 
       - name: Checkout sources
         uses: actions/checkout@v1
       - name: install libgtk-3-dev libx11-dev
