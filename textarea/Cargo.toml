@@ -8,4 +8,7 @@ edition = "2018"
 
 [dependencies]
 druid = "0.6.0"
-ropey = { path = "../ropey" }
+
+[dependencies.ropey]
+git = "https://github.com/aDotInTheVoid/ropey/"
+rev =  "653048c"
