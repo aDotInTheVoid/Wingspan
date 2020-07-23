@@ -114,6 +114,7 @@ jobs:
           components: miri
       - name: Run Miri
         run: |
+          cd textarea
           cargo miri setup
           cargo miri test 
       
