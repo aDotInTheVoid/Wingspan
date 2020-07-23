@@ -1,3 +1,6 @@
+# THIS IS HORIBLE, I DONT WANT TO TOUCH IT
+# but it should be cleaned up some day
+
 # From https://git.io/JfPqu
 
 name: build
@@ -24,7 +27,9 @@ jobs:
 
     # Clone The reop
     - uses: actions/checkout@v1
-
+    # File has unexpected size (1147 != 1124). Mirror sync in progress? [IP: 172.217.0.14 80]
+    # https://github.com/actions/virtual-environments/issues/323
+    # https://github.community/t/file-has-unexpected-size-89974-89668-mirror-sync-in-progress/17450
     - name: Remove broken apt repos [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
       run: |
