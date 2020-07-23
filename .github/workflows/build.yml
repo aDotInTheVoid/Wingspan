@@ -5,6 +5,10 @@ name: build
 on: [push, pull_request]
 
 jobs:
+
+  #############
+  # BUILD JOB #
+  #############
   build:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -12,14 +16,20 @@ jobs:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         rust: [stable, beta, nightly]
     steps:
+    
+    # Get rust
     - uses: hecrj/setup-rust-action@v1
       with:
         rust-version: ${{ matrix.rust }}
-    - uses: actions/checkout@master
+
+    # Clone The reop
+    - uses: actions/checkout@v1
+
     - name: Remove broken apt repos [Ubuntu]
       if: matrix.os == 'ubuntu-latest'
       run: |
         for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done: 
+    
     - name: install libgtk-3-dev libx11-dev
       run: |
         sudo apt update
@@ -54,7 +64,7 @@ jobs:
       - name: Remove broken apt repos [Ubuntu]
         if: matrix.os == 'ubuntu-latest'
         run: |
-          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done: 
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done:   
       - name: Checkout sources
         uses: actions/checkout@v1
       - name: install libgtk-3-dev libx11-dev
@@ -110,7 +120,7 @@ jobs:
       - name: Remove broken apt repos [Ubuntu]
         if: matrix.os == 'ubuntu-latest'
         run: |
-          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done:   
+          for apt_file in `grep -lr microsoft /etc/apt/sources.list.d/`; do sudo rm $apt_file; done:
       - name: install libgtk-3-dev libx11-dev
         run: |
           sudo apt update
@@ -120,5 +130,3 @@ jobs:
           cd ${{ matrix.dir }}
           cargo miri setup
           cargo miri test 
-      
-            
