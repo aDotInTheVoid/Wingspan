@@ -17,7 +17,7 @@ use ropey::Rope;
 
 #[cfg(feature = "druid")]
 use druid::Data;
-use std::cmp::min;
+use std::{cmp::min, fmt};
 
 #[cfg_attr(feature = "druid", derive(Clone))]
 #[derive(Clone, Debug, Default)]
@@ -50,11 +50,6 @@ impl EditableText {
             text: Rope::new(),
             cursur: 0,
         }
-    }
-
-    /// Get the text as a string.
-    pub fn to_string(&self) -> String {
-        self.text.to_string()
     }
 
     /// Create a new `EditableText` from a string.
@@ -95,6 +90,13 @@ impl EditableText {
     pub fn left(&mut self) {
         // Make sure we don't go below index 0.
         self.cursur = self.cursur.saturating_sub(1);
+    }
+}
+
+impl fmt::Display for EditableText {
+    /// Get the text as a string.
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.text)
     }
 }
 
