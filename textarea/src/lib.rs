@@ -1,6 +1,5 @@
 // All of this is so naive.
 // https://github.com/linebender/druid/blob/d84b8c50f55a28282f1e69ef51c651e70d83f9c3/druid/src/widget/textbox.rs
-// 
 
 use druid::{
     piet::{FontBuilder, PietText, PietTextLayout, Text, TextLayoutBuilder},
@@ -17,7 +16,6 @@ use textedit::EditableText;
 pub struct TextArea;
 
 impl TextArea {
-
     pub fn new() -> Self {
         Self
     }
@@ -43,7 +41,7 @@ impl Widget<EditableText> for TextArea {
     /// Recieve an event from the OS
     /// Most likely a keypress
     /// Here is where we can edit the rope
-    fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut EditableText, env: &Env) {
+    fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut EditableText, _env: &Env) {
         // Fuck it
         ctx.request_focus();
 
@@ -55,13 +53,11 @@ impl Widget<EditableText> for TextArea {
         {
             use druid::KeyCode::*;
 
-            
-
             match key_code {
                 ArrowLeft => data.left(),
                 ArrowRight => data.right(),
 
-                Delete| Backspace => data.delete(),
+                Delete | Backspace => data.delete(),
 
                 Key0 => data.insert('0'),
                 Key1 => data.insert('1'),
@@ -99,7 +95,6 @@ impl Widget<EditableText> for TextArea {
                 KeyB => data.insert('B'),
                 KeyN => data.insert('N'),
                 KeyM => data.insert('M'),
-
 
                 // No CRLF, fight me
                 Return => data.insert('\n'),
@@ -148,16 +143,16 @@ impl Widget<EditableText> for TextArea {
     fn paint(&mut self, ctx: &mut PaintCtx, data: &EditableText, env: &Env) {
         // Pull some theme stuff
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        let height = env.get(theme::BORDERED_WIDGET_HEIGHT);
+        let _height = env.get(theme::BORDERED_WIDGET_HEIGHT);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
-        let selection_color = env.get(theme::SELECTION_COLOR);
+        let _selection_color = env.get(theme::SELECTION_COLOR);
         let text_color = env.get(theme::LABEL_COLOR);
-        let placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
-        let cursor_color = env.get(theme::CURSOR_COLOR);
+        let _placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
+        let _cursor_color = env.get(theme::CURSOR_COLOR);
 
         let is_focused = ctx.is_focused();
 
-        let border_color = if is_focused {
+        let _border_color = if is_focused {
             env.get(theme::PRIMARY_LIGHT)
         } else {
             env.get(theme::BORDER_DARK)
