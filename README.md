@@ -10,21 +10,18 @@ It uses [druid](https://github.com/xi-editor/druid) for cross platform UI, and
 ## Structure
 
 - [`assets`](./assets) contains various images.
-- [`ropey`](./ropey) contains a fork of [ropey](https://github.com/cessen/ropey)
-  [1.2.0](https://github.com/cessen/ropey/releases/tag/v1.2.0). It is needed to
-  implement some druid traits.
 - [`textedit`](./textedit) implements the core text editing logic. 
 - [`textarea`](./textarea) renders textedit's logic as a druid widget.
-- [`wingspan`] creates the UI around the text editor.
+- [`wingspan`](./wingspan) creates the UI around the text editor.
 
 
 ## Status
 
-Nothing is done. You cannot even edit text.
+A very basic text editor existes in [`textarea/examples/basic.rs`](textarea/examples/basic.rs). 
 
 ## License
 
-Everything outside of the `assets` and `ropey` is licensed under either of
+Everything outside of the `assets` is licensed under either of
 
  * Apache License, Version 2.0
    ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
@@ -40,8 +37,6 @@ for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
 
 ## Other Licenses
-
-The (`ropey`)[./ropey] folder is MIT only, as described in (`ropey/LICENSE.md`)[ropey/LICENSE.md]
 
 The (`assets`)[./assets] folder is licensed
 under the Creative Commons Attribution-Share Alike 4.0 International license

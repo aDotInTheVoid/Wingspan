@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 druid = "0.6.0"
+textedit = {path = "../textedit", features=["druid"]}
 
 [dependencies.ropey]
 git = "https://github.com/aDotInTheVoid/ropey/"

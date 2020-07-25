@@ -1226,6 +1226,7 @@ version = "0.1.0"
 dependencies = [
  "druid",
  "ropey",
+ "textedit",
 ]
 
 [[package]]

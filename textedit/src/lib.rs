@@ -19,7 +19,7 @@ use ropey::Rope;
 use druid::Data;
 use std::{cmp::min, fmt};
 
-#[cfg_attr(feature = "druid", derive(Clone))]
+#[cfg_attr(feature = "druid", derive(druid::Data))]
 #[derive(Clone, Debug, Default)]
 /// The editable text item
 /// ```
