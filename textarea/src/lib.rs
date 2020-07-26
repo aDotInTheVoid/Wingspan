@@ -44,17 +44,24 @@ impl Widget<EditableText> for TextArea {
     /// Here is where we can edit the rope
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut EditableText, _env: &Env) {
         // Fuck it
+       
         ctx.request_focus();
 
         if let Event::KeyDown(KeyEvent {
             key_code,
+            // This causes problems on windows, but that's not my problem
+            // This should be fixed in druid, as if this library trys to do
+            // compat features, it will die
             is_repeat: false,
             mods: KeyModifiers { shift, .. },
             ..
         }) = event
         {
+            dbg!(event);
             let shift = *shift;
             use druid::KeyCode::*;
+
+           
 
             //TODO: clean up
             match key_code {
