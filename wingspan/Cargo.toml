@@ -4,7 +4,8 @@ version = "0.1.0"
 authors = ["Nixon <nixon.emoony@gmail.com>"]
 edition = "2018"
 description = "An experimental text editor"
-license = "(MIT OR Apache-2.0) AND CC-BY-SA-4.0"
+# This will eventualy include the logo, maybe
+license = "Apache-2.0 AND CC-BY-SA-4.0" 
 repository = "https://github.com/aDotInTheVoid/Wingspan"
 categories = ["text-editors"]
 
