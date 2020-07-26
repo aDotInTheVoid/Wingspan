@@ -1,11 +1,12 @@
 // All of this is so naive.
-// https://github.com/linebender/druid/blob/d84b8c50f55a28282f1e69ef51c651e70d83f9c3/druid/src/widget/textbox.rs
+// https://github.com/linebender/druid/blob/v0.6.0/druid/src/widget/textbox.rs
+// https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
 
 use druid::{
     piet::{FontBuilder, PietText, PietTextLayout, Text, TextLayoutBuilder},
     theme,
     widget::prelude::*,
-    KeyEvent, KeyModifiers, Point,
+    KeyEvent, Point,
 };
 
 use textedit::EditableText;
@@ -43,80 +44,44 @@ impl Widget<EditableText> for TextArea {
     /// Most likely a keypress
     /// Here is where we can edit the rope
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut EditableText, _env: &Env) {
-        // Fuck it
-       
+        // Fuck it, we'll figure out the focus later
         ctx.request_focus();
 
-        if let Event::KeyDown(KeyEvent {
-            key_code,
-            // This causes problems on windows, but that's not my problem
-            // This should be fixed in druid, as if this library trys to do
-            // compat features, it will die
-            is_repeat: false,
-            mods: KeyModifiers { shift, .. },
-            ..
-        }) = event
-        {
-            dbg!(event);
-            let shift = *shift;
-            use druid::KeyCode::*;
+        // This can be simplified with #![feature(bindings_after_at)] but this
+        // should compile on stable
+        if let Event::KeyDown(key_event) = event {
+            if let KeyEvent {
+                key_code,
+                // This causes problems on windows, but that's not my problem
+                // This should be fixed in druid, as if this library trys to do
+                // compat features, it will die
+                is_repeat: false,
+                ..
+            } = key_event
+            {
+                use druid::KeyCode::*;
 
-           
+                match key_code {
+                    ArrowLeft => data.left(),
+                    ArrowRight => data.right(),
 
-            //TODO: clean up
-            match key_code {
-                ArrowLeft => data.left(),
-                ArrowRight => data.right(),
+                    Delete | Backspace => data.delete(),
 
-                Delete | Backspace => data.delete(),
+                    // No CRLF, fight me
+                    Return => data.insert('\n'),
 
-                // No CRLF, fight me
-                Return => data.insert('\n'),
-                Space => data.insert(' '),
+                    // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
+                    key_code if key_code.is_printable() => {
+                        if let Some(txt) = key_event.text() {
+                            //TODO: see if their is a nicer rope way to do this
+                            for i in txt.chars() {
+                                data.insert(i);
+                            }
+                        }
+                    }
 
-                // Numberics
-                // TODO: !@#$%^&*(){}[], in a way independent of keyboard layout
-                Key0 => data.insert('0'),
-                Key1 => data.insert('1'),
-                Key2 => data.insert('2'),
-                Key3 => data.insert('3'),
-                Key4 => data.insert('4'),
-                Key5 => data.insert('5'),
-                Key6 => data.insert('6'),
-                Key7 => data.insert('7'),
-                Key8 => data.insert('8'),
-                Key9 => data.insert('9'),
-
-                KeyQ => data.insert(if shift { 'Q' } else { 'q' }),
-                KeyW => data.insert(if shift { 'W' } else { 'w' }),
-                KeyE => data.insert(if shift { 'E' } else { 'e' }),
-                KeyR => data.insert(if shift { 'R' } else { 'r' }),
-                KeyT => data.insert(if shift { 'T' } else { 't' }),
-                KeyY => data.insert(if shift { 'Y' } else { 'y' }),
-                KeyU => data.insert(if shift { 'U' } else { 'u' }),
-                KeyI => data.insert(if shift { 'I' } else { 'i' }),
-                KeyO => data.insert(if shift { 'O' } else { 'o' }),
-                KeyP => data.insert(if shift { 'P' } else { 'p' }),
-                // Middle row
-                KeyA => data.insert(if shift { 'A' } else { 'a' }),
-                KeyS => data.insert(if shift { 'S' } else { 's' }),
-                KeyD => data.insert(if shift { 'D' } else { 'd' }),
-                KeyF => data.insert(if shift { 'F' } else { 'f' }),
-                KeyG => data.insert(if shift { 'G' } else { 'g' }),
-                KeyH => data.insert(if shift { 'H' } else { 'h' }),
-                KeyJ => data.insert(if shift { 'J' } else { 'j' }),
-                KeyK => data.insert(if shift { 'K' } else { 'k' }),
-                KeyL => data.insert(if shift { 'L' } else { 'l' }),
-                // Bottom Row
-                KeyZ => data.insert(if shift { 'Z' } else { 'z' }),
-                KeyX => data.insert(if shift { 'X' } else { 'x' }),
-                KeyC => data.insert(if shift { 'C' } else { 'c' }),
-                KeyV => data.insert(if shift { 'V' } else { 'v' }),
-                KeyB => data.insert(if shift { 'B' } else { 'b' }),
-                KeyN => data.insert(if shift { 'N' } else { 'n' }),
-                KeyM => data.insert(if shift { 'M' } else { 'm' }),
-
-                _ => {}
+                    _ => {}
+                }
             }
         }
     }
