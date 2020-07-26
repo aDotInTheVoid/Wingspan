@@ -1,6 +1,7 @@
 {
     "files.watcherExclude": {
-        "target/**": true
+        // These paths must be absolute, hence the opening **
+        "**/target/**": true
     },
     "files.exclude": {
         "target/**": true

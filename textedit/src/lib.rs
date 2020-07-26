@@ -89,6 +89,14 @@ impl EditableText {
         // Make sure we don't go below index 0.
         self.cursur = self.cursur.saturating_sub(1);
     }
+
+    pub fn rope(&self) -> &Rope {
+        &self.text
+    }
+
+    pub fn curser(&self) -> usize {
+        self.cursur
+    }
 }
 
 impl fmt::Display for EditableText {

@@ -3,7 +3,8 @@
 // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
 
 use druid::{
-    piet::{FontBuilder, PietText, PietTextLayout, Text, TextLayoutBuilder},
+    kurbo::Line,
+    piet::{FontBuilder, PietText, PietTextLayout, Text, TextLayout, TextLayoutBuilder},
     theme,
     widget::prelude::*,
     KeyEvent, Point,
@@ -24,11 +25,11 @@ impl TextArea {
 
     /// Calculate the PietTextLayout from the given text, font, and font size
     fn get_layout(&self, piet_text: &mut PietText, text: &str, env: &Env) -> PietTextLayout {
-        let font_name = env.get(theme::FONT_NAME);
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         // TODO: caching of both the format and the layout
         let font = piet_text
-            .new_font_by_name(font_name, font_size)
+            // While druid uses the "toy" api, this is fine
+            .new_font_by_name("monospace", font_size)
             .build()
             .unwrap();
 
@@ -130,7 +131,7 @@ impl Widget<EditableText> for TextArea {
         let _selection_color = env.get(theme::SELECTION_COLOR);
         let text_color = env.get(theme::LABEL_COLOR);
         let _placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
-        let _cursor_color = env.get(theme::CURSOR_COLOR);
+        let cursor_color = env.get(theme::CURSOR_COLOR);
 
         let is_focused = ctx.is_focused();
 
@@ -145,13 +146,41 @@ impl Widget<EditableText> for TextArea {
 
         ctx.fill(clip_rect, &background_color);
 
+        // Core text happens in the lambda, outside is for aux.
         ctx.with_save(|rc| {
             rc.clip(clip_rect);
 
-            //TODO: Only pull the bit of the rope that's on screen.
+            //TODO: Figure out where this 0.8 comes from
             let text_height = font_size * 0.8;
-            let text_layout = self.get_layout(&mut rc.text(), &data.to_string(), env);
+
+            //TODO: scrolling
             let text_pos = Point::new(0.0, text_height);
+
+            //TODO: Only pull the bit of the rope that's on screen.
+            // This is super wastefull, as we do a full copy out of the rope to render
+            // but we need to convert to string before we sent it into druid
+            // so what we should do it see what needs to be painted (ie is onscrean)
+            // and only copy that.
+            let text_layout = self.get_layout(&mut rc.text(), &data.to_string(), env);
+
+            // This offset calc could be nicer if we assume a monospace font.
+            // also the position is relative the the text in text_layout, not the global rope,
+            // so when we implent partial views, this will need to change
+            let text_byte_idx = data.rope().char_to_byte(data.curser());
+            let pos = text_layout.hit_test_text_position(text_byte_idx);
+
+            // Curser rendering
+            //TODO: hot to fall back if pos==None
+            if let Some(pos) = pos {
+                let center = pos.point;
+
+                // I'm still not sure of druid's coord system, but this seems to work
+                let top = Point::new(center.x, center.y + font_size);
+                let bottom = Point::new(center.x, center.y);
+                let line = Line::new(top, bottom);
+                rc.stroke(line, &cursor_color, 1.0)
+            }
+
             rc.draw_text(&text_layout, text_pos, &text_color);
         });
     }
