@@ -15,7 +15,6 @@ Instead all it seeks to do is implement the layer between keypresses and the rop
 
 use ropey::Rope;
 
-
 use std::{cmp::min, fmt};
 
 #[cfg_attr(feature = "druid", derive(druid::Data))]

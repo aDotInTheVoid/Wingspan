@@ -5,7 +5,7 @@ use druid::{
     piet::{FontBuilder, PietText, PietTextLayout, Text, TextLayoutBuilder},
     theme,
     widget::prelude::*,
-    KeyEvent, Point, KeyModifiers,
+    KeyEvent, KeyModifiers, Point,
 };
 
 use textedit::EditableText;
@@ -13,6 +13,7 @@ use textedit::EditableText;
 /// Hidden state goes here, application state goes on the widget
 ///
 /// I'm not quite sure what goes where
+#[derive(Default, Clone, Copy)]
 pub struct TextArea;
 
 impl TextArea {
@@ -48,10 +49,7 @@ impl Widget<EditableText> for TextArea {
         if let Event::KeyDown(KeyEvent {
             key_code,
             is_repeat: false,
-            mods: KeyModifiers {
-                shift,
-                ..
-            },
+            mods: KeyModifiers { shift, .. },
             ..
         }) = event
         {
@@ -79,39 +77,37 @@ impl Widget<EditableText> for TextArea {
                 Key5 => data.insert('5'),
                 Key6 => data.insert('6'),
                 Key7 => data.insert('7'),
-                Key8 => data.insert( '8'),
+                Key8 => data.insert('8'),
                 Key9 => data.insert('9'),
 
-                KeyQ => data.insert(if shift {'Q'} else {'q'}),
-                KeyW => data.insert(if shift {'W'} else {'w'}),
-                KeyE => data.insert(if shift {'E'} else {'e'}),
-                KeyR => data.insert(if shift {'R'} else {'r'}),
-                KeyT => data.insert(if shift {'T'} else {'t'}),
-                KeyY => data.insert(if shift {'Y'} else {'y'}),
-                KeyU => data.insert(if shift {'U'} else {'u'}),
-                KeyI => data.insert(if shift {'I'} else {'i'}),
-                KeyO => data.insert(if shift {'O'} else {'o'}),
-                KeyP => data.insert(if shift {'P'} else {'p'}),
+                KeyQ => data.insert(if shift { 'Q' } else { 'q' }),
+                KeyW => data.insert(if shift { 'W' } else { 'w' }),
+                KeyE => data.insert(if shift { 'E' } else { 'e' }),
+                KeyR => data.insert(if shift { 'R' } else { 'r' }),
+                KeyT => data.insert(if shift { 'T' } else { 't' }),
+                KeyY => data.insert(if shift { 'Y' } else { 'y' }),
+                KeyU => data.insert(if shift { 'U' } else { 'u' }),
+                KeyI => data.insert(if shift { 'I' } else { 'i' }),
+                KeyO => data.insert(if shift { 'O' } else { 'o' }),
+                KeyP => data.insert(if shift { 'P' } else { 'p' }),
                 // Middle row
-                KeyA => data.insert(if shift {'A'} else {'a'}),
-                KeyS => data.insert(if shift {'S'} else {'s'}),
-                KeyD => data.insert(if shift {'D'} else {'d'}),
-                KeyF => data.insert(if shift {'F'} else {'f'}),
-                KeyG => data.insert(if shift {'G'} else {'g'}),
-                KeyH => data.insert(if shift {'H'} else {'h'}),
-                KeyJ => data.insert(if shift {'J'} else {'j'}),
-                KeyK => data.insert(if shift {'K'} else {'k'}),
-                KeyL => data.insert(if shift {'L'} else {'l'}),
+                KeyA => data.insert(if shift { 'A' } else { 'a' }),
+                KeyS => data.insert(if shift { 'S' } else { 's' }),
+                KeyD => data.insert(if shift { 'D' } else { 'd' }),
+                KeyF => data.insert(if shift { 'F' } else { 'f' }),
+                KeyG => data.insert(if shift { 'G' } else { 'g' }),
+                KeyH => data.insert(if shift { 'H' } else { 'h' }),
+                KeyJ => data.insert(if shift { 'J' } else { 'j' }),
+                KeyK => data.insert(if shift { 'K' } else { 'k' }),
+                KeyL => data.insert(if shift { 'L' } else { 'l' }),
                 // Bottom Row
-                KeyZ => data.insert(if shift {'Z'} else {'z'}),
-                KeyX => data.insert(if shift {'X'} else {'x'}),
-                KeyC => data.insert(if shift {'C'} else {'c'}),
-                KeyV => data.insert(if shift {'V'} else {'v'}),
-                KeyB => data.insert(if shift {'B'} else {'b'}),
-                KeyN => data.insert(if shift {'N'} else {'n'}),
-                KeyM => data.insert(if shift {'M'} else {'m'}),
-
-
+                KeyZ => data.insert(if shift { 'Z' } else { 'z' }),
+                KeyX => data.insert(if shift { 'X' } else { 'x' }),
+                KeyC => data.insert(if shift { 'C' } else { 'c' }),
+                KeyV => data.insert(if shift { 'V' } else { 'v' }),
+                KeyB => data.insert(if shift { 'B' } else { 'b' }),
+                KeyN => data.insert(if shift { 'N' } else { 'n' }),
+                KeyM => data.insert(if shift { 'M' } else { 'm' }),
 
                 _ => {}
             }
