@@ -167,16 +167,28 @@ impl Widget<EditableText> for TextArea {
             // also the position is relative the the text in text_layout, not the global rope,
             // so when we implent partial views, this will need to change
             let text_byte_idx = data.rope().char_to_byte(data.curser());
+
+            // This gives us the x, but for y, it's not platform independent,
+            // linux gives from the top, but macOS is on the bottom.
+            // Also we need to do edge cases around the \n that this get's wrong
+            // so we only can trust pos.x
             let pos = text_layout.hit_test_text_position(text_byte_idx);
 
             // Curser rendering
             //TODO: hot to fall back if pos==None
             if let Some(pos) = pos {
-                let center = pos.point;
 
+                // This is either top left, or bottom left, platfrom dependent
+                let center = pos.point;
                 // I'm still not sure of druid's coord system, but this seems to work
+                // On macOS, center.y - font_size works
+                // This is right on gnu/linux/gtk
+                // I haven't checked on windows
                 let top = Point::new(center.x, center.y + font_size);
                 let bottom = Point::new(center.x, center.y);
+                
+                //dbg!(center);
+
                 let line = Line::new(top, bottom);
                 rc.stroke(line, &cursor_color, 1.0)
             }
