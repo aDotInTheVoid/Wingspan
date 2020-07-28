@@ -1,9 +1,12 @@
 use druid::widget::{Button, Flex, Label, TextBox};
-use druid::{AppLauncher, Data, Lens, LocalizedString, Widget, WidgetExt, WindowDesc};
+use druid::{
+    AppLauncher, Data, Lens, LocalizedString, Widget, WidgetExt, WindowDesc,
+};
 
 const VERTICAL_WIDGET_SPACING: f64 = 20.0;
 const TEXT_BOX_WIDTH: f64 = 200.0;
-const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Hello World!");
+const WINDOW_TITLE: LocalizedString<AppState> =
+    LocalizedString::new("Hello World!");
 
 //mod ropey_text_box;
 

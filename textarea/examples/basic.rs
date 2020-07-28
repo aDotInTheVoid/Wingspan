@@ -2,7 +2,8 @@ use druid::{AppLauncher, LocalizedString, WindowDesc};
 use textarea::TextArea;
 use textedit::EditableText;
 
-const WINDOW_TITLE: LocalizedString<EditableText> = LocalizedString::new("Hello World!");
+const WINDOW_TITLE: LocalizedString<EditableText> =
+    LocalizedString::new("Hello World!");
 
 fn main() {
     let main = WindowDesc::new(TextArea::new)
