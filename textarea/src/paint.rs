@@ -28,71 +28,76 @@ impl TextArea {
     ) {
         // Pull some theme stuff
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        let _height = env.get(theme::BORDERED_WIDGET_HEIGHT);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
-        let _selection_color = env.get(theme::SELECTION_COLOR);
         let text_color = env.get(theme::LABEL_COLOR);
-        let _placeholder_color = env.get(theme::PLACEHOLDER_COLOR);
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
-        let is_focused = ctx.is_focused();
-
-        let _border_color = if is_focused {
-            env.get(theme::PRIMARY_LIGHT)
-        } else {
-            env.get(theme::BORDER_DARK)
-        };
-
-        // Paint the background
+        // First we paint the background
+        // This is so we can add padding later, see druid::widget::TextBox for
+        // more
         let clip_rect = ctx.size().to_rect();
         ctx.fill(clip_rect, &background_color);
 
-        // Core text happens in the lambda, outside is for aux.
+        // Inside the lambda we make thing's relative to where text is, and not
+        // padding I think?
         ctx.with_save(|rc| {
-            // For padding stuff, I think
+            // Here we re-adjust the coord system to ignore padding, see above
+            // I think?
             rc.clip(clip_rect);
 
+            // These next 2 lines are a mistery to me.
             // TODO: Figure out where this 0.8 comes from
             // font_size is the number of "pixels" from top to bottom,
             // so that makes sense.
             let text_height = font_size * 0.8;
-
             // TODO: scrolling
             // TODO: what is this
             let text_pos = Point::new(0.0, text_height);
 
-            // TODO: Only pull the bit of the rope that's on screen.
-            // This is super wastefull, as we do a full copy out of the rope to
-            // render but we need to convert to string before we
-            // sent it into druid so what we should do it see what
-            // needs to be painted (ie is onscrean) and only copy
-            // that.
+            // Next we generate the `text_layout`, which is the text + the
+            // formatting (I think)
+            //
+            // TODO: Only pull the bit of the
+            // rope that's on screen. This is super wastefull, as we
+            // do a full copy out of the rope to render but we need
+            // to convert to string before we sent it into druid so
+            // what we should do it see what needs to be painted (ie
+            // is onscrean) and only copy that.
             let text_layout =
                 self.get_layout(&mut rc.text(), &data.to_string(), env);
 
-            // This offset calc could be nicer if we assume a monospace font.
-            // also the position is relative the the text in text_layout, not
-            // the global rope, so when we implent partial views,
-            // this will need to change
+            // Now we start trying to draw the curser it is relative to the
+            // text, and that's easier and more robust to do using
+            // the text, rather than assuming monospace and winging
+            // it.
+
+            // When the text layout doesn't have the whole rope, this will need
+            // to change, but here we convert from ropey'r char based system to
+            // druid's bytes based system.
             let text_byte_idx = data.rope().char_to_byte(data.curser());
 
-            // 0 indexed from top line number. We can probably cache this, but
-            // this should be quite fast (O(log n)).
-            let lineno: f64 = data.rope().char_to_line(data.curser()) as f64;
-
-            // This gives us the x, but for y, it's not platform independent,
-            // linux gives from the top, but macOS is on the bottom.
-            // Also we need to do edge cases around the \n that this get's wrong
-            // so we only can trust pos.x
+            // Now we get the position of the curser in the text
             let pos = text_layout.hit_test_text_position(text_byte_idx);
 
-            // Curser rendering
             // TODO: hot to fall back if pos==None
             // that'll happen if the rope is empty, and maybe other reasons
             if let Some(pos) = pos {
-                // pos is either top left, or bottom left, platfrom dependent
-                // Therefor we only use pos for x
                 let mut x = pos.point.x;
+
+                // 0 indexed from top line number. We can probably cache this,
+                // but this should be quite fast (O(log n)).
+                let lineno: f64 =
+                    data.rope().char_to_line(data.curser()) as f64;
+
+                // https://github.com/linebender/druid/issues/1105
+                // means we can't trust pos.y, so this is the work around
+
+                // magic_number is the spacing between the top of one line and
+                // the bottom of the next. Here we find manualy where the text
+                // top and bottom is based on reversing the table in the
+                // get_magic method. That table was from an old version that
+                // only ran on gtk
+                // https://github.com/aDotInTheVoid/Wingspan/blob/dff1b3207154fe1f63056c40b0b3eff8c1dd18cc/textarea/src/lib.rs#L169-L181
 
                 // The default works for JetBrains Mono.
                 // TODO: sould we log if we have to use the default (ie
@@ -112,13 +117,16 @@ impl TextArea {
                 {
                     x = 1.0;
                 }
+
+                // Create the curser line
                 let top = Point::new(x, topy);
                 let bottom = Point::new(x, bottomy);
                 let line = Line::new(top, bottom);
 
+                // Draw the curser
                 rc.stroke(line, &cursor_color, 1.0)
             }
-
+            // Draw the text
             rc.draw_text(&text_layout, text_pos, &text_color);
         });
     }
