@@ -37,38 +37,35 @@ impl Widget<EditableText> for TextArea {
         // This can be simplified with #![feature(bindings_after_at)] but this
         // should compile on stable
         if let Event::KeyDown(key_event) = event {
-            if let KeyEvent {
+            let KeyEvent {
                 key_code,
-                // This causes problems on windows, but that's not my problem
-                // This should be fixed in druid, as if this library trys to do
-                // compat features, it will die
-                is_repeat: false,
+                /* We can also pull out is repeat here, but the platfoms seem
+                 * to do an ok job of handling this */
                 ..
-            } = key_event
-            {
-                use druid::KeyCode::*;
+            } = key_event;
 
-                match key_code {
-                    ArrowLeft => data.left(),
-                    ArrowRight => data.right(),
+            use druid::KeyCode::*;
 
-                    Delete | Backspace => data.delete(),
+            match key_code {
+                ArrowLeft => data.left(),
+                ArrowRight => data.right(),
 
-                    // No CRLF, fight me
-                    Return => data.insert('\n'),
+                Delete | Backspace => data.delete(),
 
-                    // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
-                    key_code if key_code.is_printable() => {
-                        if let Some(txt) = key_event.text() {
-                            //TODO: see if their is a nicer rope way to do this
-                            for i in txt.chars() {
-                                data.insert(i);
-                            }
+                // No CRLF, fight me
+                Return => data.insert('\n'),
+
+                // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
+                key_code if key_code.is_printable() => {
+                    if let Some(txt) = key_event.text() {
+                        //TODO: see if their is a nicer rope way to do this
+                        for i in txt.chars() {
+                            data.insert(i);
                         }
                     }
-
-                    _ => {}
                 }
+
+                _ => {}
             }
         }
     }
