@@ -12,11 +12,13 @@ mod paint;
 ///
 /// I'm not quite sure what goes where
 #[derive(Default, Clone, Copy)]
-pub struct TextArea;
+pub struct TextArea {
+    vscroll: f64,
+}
 
 impl TextArea {
     pub fn new() -> Self {
-        Self
+        Self { vscroll: 0. }
     }
 }
 
@@ -52,6 +54,18 @@ impl Widget<EditableText> for TextArea {
 
                 Delete | Backspace => data.delete(),
 
+                // TODO: Use a more
+                PageDown => {
+                    self.vscroll += 10.0;
+                    ctx.request_paint();
+                }
+                PageUp => {
+                    let down = self.vscroll - 10.0;
+                    // f64 isn't Ord
+                    self.vscroll = if down < 0. { 0. } else { down };
+                    ctx.request_paint();
+                }
+
                 // No CRLF, fight me
                 Return => data.insert('\n'),
 
@@ -67,6 +81,7 @@ impl Widget<EditableText> for TextArea {
 
                 _ => {}
             }
+            dbg!(self.vscroll);
         }
     }
 

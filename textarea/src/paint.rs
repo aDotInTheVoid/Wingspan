@@ -52,7 +52,8 @@ impl TextArea {
             let text_height = font_size * 0.8;
             // TODO: scrolling
             // TODO: what is this
-            let text_pos = Point::new(0.0, text_height);
+
+            let text_pos = Point::new(0.0, text_height - self.vscroll);
 
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
@@ -119,8 +120,8 @@ impl TextArea {
                 }
 
                 // Create the curser line
-                let top = Point::new(x, topy);
-                let bottom = Point::new(x, bottomy);
+                let top = Point::new(x, topy - self.vscroll);
+                let bottom = Point::new(x, bottomy - self.vscroll);
                 let line = Line::new(top, bottom);
 
                 // Draw the curser
