@@ -93,21 +93,13 @@ impl TextArea {
                 // https://github.com/linebender/druid/issues/1105
                 // means we can't trust pos.y, so this is the work around
 
-                // magic_number is the spacing between the top of one line and
-                // the bottom of the next. Here we find manualy where the text
-                // top and bottom is based on reversing the table in the
-                // get_magic method. That table was from an old version that
-                // only ran on gtk
-                // https://github.com/aDotInTheVoid/Wingspan/blob/dff1b3207154fe1f63056c40b0b3eff8c1dd18cc/textarea/src/lib.rs#L169-L181
 
                 // The default works for JetBrains Mono.
                 // TODO: sould we log if we have to use the default (ie
-                // get_magic has failed)
-                let magic_number =
-                    self.get_magic(&mut rc.text(), env).unwrap_or(4.0);
-                let line_spacing = font_size + magic_number;
+                // get_line_spacing has failed)    
+                let line_spacing = self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
                 let topy = lineno * line_spacing;
-                let bottomy = ((lineno + 1.0) * line_spacing) - magic_number;
+                let bottomy = topy + font_size;
 
                 // If we are just past a newline, the position thinks we're on
                 // the line above, so misreports. Here we abjust
@@ -155,22 +147,12 @@ impl TextArea {
             .unwrap()
     }
 
-    // Font size: 15
-    // Text height: 12
-    // Line | Bottom y | Top y
-    // -----|----------|------
-    // 0    | 0        | 15
-    // 1    | 19       | 34
-    // 2    | 38       | 53
-    // on macOS with JetBrains mono
-    // Calculate the top and bottom y coords
-    // TODO: figure out where this number is from
-    // I got it by debuging  pos.point.y (see table above)
-    fn get_magic(&self, piet_text: &mut PietText, env: &Env) -> Option<f64> {
+    // Line spacing is the difference between the top of one line and the top of another.
+    // Their's probably a better way to get it, but this works for now.
+    fn get_line_spacing(&self, piet_text: &mut PietText, env: &Env) -> Option<f64> {
         let layout = self.get_layout(piet_text, "12\n45", env);
         let top = layout.hit_test_text_position(1)?.point.y;
         let bottom = layout.hit_test_text_position(4)?.point.y;
-        let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        Some(bottom - top - font_size)
+        Some(bottom - top)
     }
 }
