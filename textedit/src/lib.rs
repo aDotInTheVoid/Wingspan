@@ -135,7 +135,6 @@ mod tests {
         assert_eq!(&text.to_string(), "abc");
         text.right();
         text.right();
-        dbg!(&text);
         text.insert('f');
         assert_eq!(&text.to_string(), "abfc");
         text.delete();
