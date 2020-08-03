@@ -50,10 +50,36 @@ impl TextArea {
             // font_size is the number of "pixels" from top to bottom,
             // so that makes sense.
             let text_height = font_size * 0.8;
+
+            // 0 indexed from top line number. We can probably cache this,
+            // but this should be quite fast (O(log n)).
+            let lineno: f64 = data.rope().char_to_line(data.curser()) as f64;
             // TODO: scrolling
             // TODO: what is this
-
             let text_pos = Point::new(0.0, text_height - self.vscroll);
+
+            // The default works for JetBrains Mono.
+            // TODO: sould we log if we have to use the default (ie
+            // get_line_spacing has failed)
+            let line_spacing =
+                self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
+            let topy = lineno * line_spacing;
+            let bottomy = topy + font_size;
+
+            // Number of lines to remove from the top.
+            // Round down, so lines partialy in display are still rendered
+            let lines_to_remove = (self.vscroll / line_spacing).floor();
+            // Number of lines to keep.
+            // Here we round up, for the same reason
+
+            let num_lines = (rc.size().height / line_spacing).ceil();
+            // Check nothing is castastrophicly wrong, and then cast to an int.
+            debug_assert!(lines_to_remove >= 0.0);
+            let lines_to_remove = lines_to_remove as u64;
+            debug_assert!(num_lines >= 0.0);
+            let num_lines = num_lines as u64;
+
+            dbg!((num_lines, lines_to_remove));
 
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
@@ -85,21 +111,8 @@ impl TextArea {
             if let Some(pos) = pos {
                 let mut x = pos.point.x;
 
-                // 0 indexed from top line number. We can probably cache this,
-                // but this should be quite fast (O(log n)).
-                let lineno: f64 =
-                    data.rope().char_to_line(data.curser()) as f64;
-
                 // https://github.com/linebender/druid/issues/1105
                 // means we can't trust pos.y, so this is the work around
-
-
-                // The default works for JetBrains Mono.
-                // TODO: sould we log if we have to use the default (ie
-                // get_line_spacing has failed)    
-                let line_spacing = self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
-                let topy = lineno * line_spacing;
-                let bottomy = topy + font_size;
 
                 // If we are just past a newline, the position thinks we're on
                 // the line above, so misreports. Here we abjust
@@ -147,9 +160,14 @@ impl TextArea {
             .unwrap()
     }
 
-    // Line spacing is the difference between the top of one line and the top of another.
-    // Their's probably a better way to get it, but this works for now.
-    fn get_line_spacing(&self, piet_text: &mut PietText, env: &Env) -> Option<f64> {
+    // Line spacing is the difference between the top of one line and the top of
+    // another. Their's probably a better way to get it, but this works for
+    // now.
+    fn get_line_spacing(
+        &self,
+        piet_text: &mut PietText,
+        env: &Env,
+    ) -> Option<f64> {
         let layout = self.get_layout(piet_text, "12\n45", env);
         let top = layout.hit_test_text_position(1)?.point.y;
         let bottom = layout.hit_test_text_position(4)?.point.y;

@@ -81,7 +81,6 @@ impl Widget<EditableText> for TextArea {
 
                 _ => {}
             }
-            dbg!(self.vscroll);
         }
     }
 
