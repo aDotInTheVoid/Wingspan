@@ -51,47 +51,48 @@ impl TextArea {
             // so that makes sense.
             let text_height = font_size * 0.8;
 
-            // 0 indexed from top line number. We can probably cache this,
-            // but this should be quite fast (O(log n)).
-            let lineno: f64 = data.rope().char_to_line(data.curser()) as f64;
-            // TODO: scrolling
-            // TODO: what is this
-            let text_pos = Point::new(0.0, text_height - self.vscroll);
-
             // The default works for JetBrains Mono.
             // TODO: sould we log if we have to use the default (ie
             // get_line_spacing has failed)
             let line_spacing =
                 self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
-            let topy = lineno * line_spacing;
-            let bottomy = topy + font_size;
 
             // Number of lines to remove from the top.
             // Round down, so lines partialy in display are still rendered
             let lines_to_remove = (self.vscroll / line_spacing).floor();
             // Number of lines to keep.
             // Here we round up, for the same reason
-
             let num_lines = (rc.size().height / line_spacing).ceil();
             // Check nothing is castastrophicly wrong, and then cast to an int.
             debug_assert!(lines_to_remove >= 0.0);
-            let lines_to_remove = lines_to_remove as u64;
+            let lines_to_remove = lines_to_remove as usize;
             debug_assert!(num_lines >= 0.0);
-            let num_lines = num_lines as u64;
+            let num_lines = num_lines as usize;
 
-            dbg!((num_lines, lines_to_remove));
+            // 0 indexed from top line number. We can probably cache this,
+            // but this should be quite fast (O(log n)).
+            let lineno: f64 = (data.rope().char_to_line(data.curser())
+                - lines_to_remove) as f64;
+
+            let pixels_removed = lines_to_remove as f64 * line_spacing;
+            let vscroll = self.vscroll - pixels_removed;
+
+            let text_start_idx = data.rope().line_to_char(lines_to_remove);
+            let text_end_idx =
+                data.rope().line_to_char(lines_to_remove + num_lines);
+
+            let displayed_rope =
+                data.rope().slice(text_start_idx..text_end_idx);
+
+            dbg!(displayed_rope.to_string(), self.vscroll, vscroll);
 
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
-            //
-            // TODO: Only pull the bit of the
-            // rope that's on screen. This is super wastefull, as we
-            // do a full copy out of the rope to render but we need
-            // to convert to string before we sent it into druid so
-            // what we should do it see what needs to be painted (ie
-            // is onscrean) and only copy that.
-            let text_layout =
-                self.get_layout(&mut rc.text(), &data.to_string(), env);
+            let text_layout = self.get_layout(
+                &mut rc.text(),
+                &displayed_rope.to_string(),
+                env,
+            );
 
             // Now we start trying to draw the curser it is relative to the
             // text, and that's easier and more robust to do using
@@ -101,14 +102,23 @@ impl TextArea {
             // When the text layout doesn't have the whole rope, this will need
             // to change, but here we convert from ropey'r char based system to
             // druid's bytes based system.
-            let text_byte_idx = data.rope().char_to_byte(data.curser());
+
+            //TODO: This will panic if the curser goes outside the area on display.
+            let text_byte_idx = data.rope().char_to_byte(data.curser())
+                - data.rope().char_to_byte(text_start_idx);
 
             // Now we get the position of the curser in the text
-            let pos = text_layout.hit_test_text_position(text_byte_idx);
+            let curser_pos = text_layout.hit_test_text_position(text_byte_idx);
+
+            // TODO: scrolling
+            // TODO: what is this
+            let text_pos = Point::new(0.0, text_height - vscroll);
+            let topy = lineno * line_spacing - vscroll;
+            let bottomy = topy + font_size;
 
             // TODO: hot to fall back if pos==None
             // that'll happen if the rope is empty, and maybe other reasons
-            if let Some(pos) = pos {
+            if let Some(pos) = curser_pos {
                 let mut x = pos.point.x;
 
                 // https://github.com/linebender/druid/issues/1105
@@ -125,8 +135,8 @@ impl TextArea {
                 }
 
                 // Create the curser line
-                let top = Point::new(x, topy - self.vscroll);
-                let bottom = Point::new(x, bottomy - self.vscroll);
+                let top = Point::new(x, topy);
+                let bottom = Point::new(x, bottomy);
                 let line = Line::new(top, bottom);
 
                 // Draw the curser
