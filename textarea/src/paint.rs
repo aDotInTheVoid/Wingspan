@@ -68,10 +68,6 @@ impl TextArea {
             debug_assert!(lines_to_render >= 0.0);
             let num_lines = lines_to_render as usize;
 
-            // The line number in the local rope.
-            let local_lineno: f64 = (global_rope.char_to_line(data.curser())
-                - lines_to_remove) as f64;
-
             // self.vscroll is the amount of scrolling done overall.
             // local_vscroll is how far up we need to move the text.
             let pixels_removed = lines_to_remove as f64 * line_spacing;
@@ -85,7 +81,7 @@ impl TextArea {
             let text_end_idx =
                 global_rope.line_to_char(lines_to_remove + num_lines);
             let local_rope = global_rope.slice(text_start_idx..text_end_idx);
-            
+
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
             let text_layout =
@@ -98,6 +94,10 @@ impl TextArea {
             // Bytewise index of the curser position in the local rope
             let text_byte_idx = global_rope.char_to_byte(data.curser())
                 - global_rope.char_to_byte(text_start_idx);
+
+            // The line number in the local rope.
+            let local_lineno: f64 = (global_rope.char_to_line(data.curser())
+                - lines_to_remove) as f64;
 
             // Now we get the position of the curser in the text
             let curser_pos = text_layout.hit_test_text_position(text_byte_idx);
