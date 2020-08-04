@@ -2,7 +2,7 @@
 // https://github.com/linebender/druid/blob/v0.6.0/druid/src/widget/textbox.rs
 // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
 
-use druid::{widget::prelude::*, KeyEvent, MouseEvent};
+use druid::{widget::prelude::*, MouseEvent};
 
 use textedit::EditableText;
 

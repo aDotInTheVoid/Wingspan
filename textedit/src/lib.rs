@@ -15,7 +15,7 @@ Instead all it seeks to do is implement the layer between keypresses and the rop
 
 use ropey::Rope;
 
-use std::{cmp::min, fmt};
+use std::{cmp::min, fmt, io};
 
 #[cfg_attr(feature = "druid", derive(druid::Data))]
 #[derive(Clone, Debug, Default)]
@@ -96,6 +96,13 @@ impl EditableText {
 
     pub fn curser(&self) -> usize {
         self.cursur
+    }
+
+    pub fn from_reader<T: io::Read>(reader: T) -> io::Result<Self> {
+        Ok(Self{
+            text: Rope::from_reader(reader)?,
+            cursur: 0,
+        })
     }
 }
 
