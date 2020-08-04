@@ -12,7 +12,7 @@ use druid::{
         FontBuilder, PietText, PietTextLayout, Text, TextLayout,
         TextLayoutBuilder,
     },
-    theme, Env, PaintCtx, Point, RenderContext,
+    theme, Color, Env, PaintCtx, Point, RenderContext,
 };
 
 impl TextArea {
@@ -87,50 +87,76 @@ impl TextArea {
             let text_layout =
                 self.get_layout(&mut rc.text(), &local_rope.to_string(), env);
 
-            //=================================================================
-            // Curser
-            //=================================================================
 
-            // Bytewise index of the curser position in the local rope
-            let text_byte_idx = global_rope.char_to_byte(data.curser())
-                - global_rope.char_to_byte(text_start_idx);
+            self.paint_curser(
+                rc,
+                data,
+                global_rope,
+                text_start_idx,
+                lines_to_remove,
+                &text_layout,
+                line_spacing,
+                local_vscroll,
+                font_size,
+                cursor_color,
+            );
 
-            // The line number in the local rope.
-            let local_lineno: f64 = (global_rope.char_to_line(data.curser())
-                - lines_to_remove) as f64;
-
-            // Now we get the position of the curser in the text
-            let curser_pos = text_layout.hit_test_text_position(text_byte_idx);
-
-            // https://github.com/linebender/druid/issues/1105
-            // pos.y isn't platform independent, so we use this instead.
-            let topy = local_lineno * line_spacing - local_vscroll;
-            let bottomy = topy + font_size;
-
-            // TODO: hot to fall back if pos==None
-            // that'll happen if the rope is empty, and maybe other reasons
-            if let Some(pos) = curser_pos {
-                let mut x = pos.point.x;
-
-                // If we're on a newline, the x is from the previous line
-                // TODO: Don't index into the global rope
-                if global_rope.chars_at(data.curser().saturating_sub(1)).next()
-                    == Some('\n')
-                {
-                    x = 1.0;
-                }
-
-                // Create the curser line
-                let top = Point::new(x, topy);
-                let bottom = Point::new(x, bottomy);
-                let line = Line::new(top, bottom);
-                // Draw the curser
-                // TODO: Make width configurable
-                rc.stroke(line, &cursor_color, 1.0)
-            }
             // Draw the text
             rc.draw_text(&text_layout, text_pos, &text_color);
         });
+    }
+
+    fn paint_curser(
+        &mut self,
+        ctx: &mut PaintCtx,
+        data: &EditableText,
+        global_rope: &ropey::Rope,
+        text_start_idx: usize,
+        lines_to_remove: usize,
+        text_layout: &PietTextLayout,
+        line_spacing: f64,
+        local_vscroll: f64,
+        font_size: f64,
+        cursor_color: Color,
+    ) -> Option<()> {
+        // Bytewise index of the curser position in the local rope
+        let text_byte_idx = global_rope.char_to_byte(data.curser())
+            - global_rope.char_to_byte(text_start_idx);
+
+        // The line number in the local rope.
+        let local_lineno: f64 =
+            (global_rope.char_to_line(data.curser()) - lines_to_remove) as f64;
+
+        // Now we get the position of the curser in the text
+        let curser_pos = text_layout.hit_test_text_position(text_byte_idx);
+
+        // https://github.com/linebender/druid/issues/1105
+        // pos.y isn't platform independent, so we use this instead.
+        let topy = local_lineno * line_spacing - local_vscroll;
+        let bottomy = topy + font_size;
+
+        // TODO: hot to fall back if pos==None
+        // that'll happen if the rope is empty, and maybe other reasons
+        if let Some(pos) = curser_pos {
+            let mut x = pos.point.x;
+
+            // If we're on a newline, the x is from the previous line
+            // TODO: Don't index into the global rope
+            if global_rope.chars_at(data.curser().saturating_sub(1)).next()
+                == Some('\n')
+            {
+                x = 1.0;
+            }
+
+            // Create the curser line
+            let top = Point::new(x, topy);
+            let bottom = Point::new(x, bottomy);
+            let line = Line::new(top, bottom);
+            // Draw the curser
+            // TODO: Make width configurable
+            ctx.stroke(line, &cursor_color, 1.0)
+        }
+        Some(())
     }
 
     fn get_layout(
