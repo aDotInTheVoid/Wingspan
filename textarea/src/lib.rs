@@ -2,7 +2,7 @@
 // https://github.com/linebender/druid/blob/v0.6.0/druid/src/widget/textbox.rs
 // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
 
-use druid::{widget::prelude::*, KeyEvent};
+use druid::{widget::prelude::*, KeyEvent, MouseEvent};
 
 use textedit::EditableText;
 
@@ -36,51 +36,49 @@ impl Widget<EditableText> for TextArea {
         // Fuck it, we'll figure out the focus later
         ctx.request_focus();
 
-        // This can be simplified with #![feature(bindings_after_at)] but this
-        // should compile on stable
-        if let Event::KeyDown(key_event) = event {
-            let KeyEvent {
-                key_code,
-                /* We can also pull out is repeat here, but the platfoms seem
-                 * to do an ok job of handling this */
-                ..
-            } = key_event;
+        match event {
+            Event::KeyDown(key_event) => {
+                use druid::KeyCode::*;
 
-            use druid::KeyCode::*;
+                match key_event.key_code {
+                    ArrowLeft => data.left(),
+                    ArrowRight => data.right(),
 
-            match key_code {
-                ArrowLeft => data.left(),
-                ArrowRight => data.right(),
+                    Delete | Backspace => data.delete(),
 
-                Delete | Backspace => data.delete(),
+                    // TODO: Use a better number than 10.0
+                    PageDown => {
+                        self.vscroll += 10.0;
+                    }
+                    PageUp => {
+                        let down = self.vscroll - 10.0;
+                        // f64 isn't Ord
+                        self.vscroll = if down < 0. { 0. } else { down };
+                    }
 
-                // TODO: Use a more
-                PageDown => {
-                    self.vscroll += 10.0;
-                    ctx.request_paint();
-                }
-                PageUp => {
-                    let down = self.vscroll - 10.0;
-                    // f64 isn't Ord
-                    self.vscroll = if down < 0. { 0. } else { down };
-                    ctx.request_paint();
-                }
+                    // No CRLF, fight me
+                    Return => data.insert('\n'),
 
-                // No CRLF, fight me
-                Return => data.insert('\n'),
-
-                // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
-                key_code if key_code.is_printable() => {
-                    if let Some(txt) = key_event.text() {
-                        //TODO: see if their is a nicer rope way to do this
-                        for i in txt.chars() {
-                            data.insert(i);
+                    // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
+                    key_code if key_code.is_printable() => {
+                        if let Some(txt) = key_event.text() {
+                            //TODO: see if their is a nicer rope way to do this
+                            for i in txt.chars() {
+                                data.insert(i);
+                            }
                         }
                     }
+                    _ => {}
                 }
-
-                _ => {}
+                ctx.request_paint()
             }
+            Event::Wheel(MouseEvent { wheel_delta, .. }) => {
+                // TODO: Make this feel native (acceleration, etc)
+                let vscroll = self.vscroll + wheel_delta.y;
+                self.vscroll = if vscroll < 0. { 0. } else { vscroll };
+                ctx.request_paint();
+            }
+            _ => {}
         }
     }
 

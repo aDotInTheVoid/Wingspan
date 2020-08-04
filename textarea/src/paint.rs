@@ -51,6 +51,21 @@ impl TextArea {
             let line_spacing =
                 self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
 
+            // The number of lines on the screen.
+            // We round up, as we want to include lines partialy on the screen
+            let lines_to_render = (rc.size().height / line_spacing).ceil();
+            debug_assert!(lines_to_render >= 0.0);
+            let lines_to_render = lines_to_render as usize;
+
+            // Make sure the vscroll doesn't go over the edge.
+            if self.vscroll
+                > line_spacing
+                    * (global_rope.len_lines() - lines_to_render) as f64
+            {
+                self.vscroll = line_spacing
+                    * (global_rope.len_lines() - lines_to_render) as f64
+            }
+
             //=================================================================
             // Partial Rendering Calculatings
             //=================================================================
@@ -58,14 +73,10 @@ impl TextArea {
             // Number of lines to remove from the top.
             // Round down, so lines partialy in display are still rendered
             let lines_to_remove = (self.vscroll / line_spacing).floor();
-            // Number of lines to keep.
-            // Here we round up, for the same reason
-            let lines_to_render = (rc.size().height / line_spacing).ceil();
+
             // Check nothing is castastrophicly wrong, and then cast to an int.
             debug_assert!(lines_to_remove >= 0.0);
             let lines_to_remove = lines_to_remove as usize;
-            debug_assert!(lines_to_render >= 0.0);
-            let num_lines = lines_to_render as usize;
 
             // self.vscroll is the amount of scrolling done overall.
             // local_vscroll is how far up we need to move the text.
@@ -78,7 +89,7 @@ impl TextArea {
             // Extract the onscrean rope
             let text_start_idx = global_rope.line_to_char(lines_to_remove);
             let text_end_idx =
-                global_rope.line_to_char(lines_to_remove + num_lines);
+                global_rope.line_to_char(lines_to_remove + lines_to_render);
             let local_rope = global_rope.slice(text_start_idx..text_end_idx);
 
             // Next we generate the `text_layout`, which is the text + the
