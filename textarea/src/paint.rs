@@ -30,6 +30,8 @@ impl TextArea {
         // Preamble
         //=================================================================
 
+        let global_rope = data.rope();
+
         // Pull some theme stuff
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
@@ -45,10 +47,6 @@ impl TextArea {
         // Move into a save, and render most of the stuff inside of it.
         ctx.with_save(|rc| {
             rc.clip(clip_rect);
-
-            // TODO: Figure out where this 0.8 comes from
-            let text_height = font_size * 0.8;
-
             // TODO: Log an error if we use the default.
             // This in the top to top spacing
             let line_spacing =
@@ -63,53 +61,50 @@ impl TextArea {
             let lines_to_remove = (self.vscroll / line_spacing).floor();
             // Number of lines to keep.
             // Here we round up, for the same reason
-            let num_lines = (rc.size().height / line_spacing).ceil();
+            let lines_to_render = (rc.size().height / line_spacing).ceil();
             // Check nothing is castastrophicly wrong, and then cast to an int.
             debug_assert!(lines_to_remove >= 0.0);
             let lines_to_remove = lines_to_remove as usize;
-            debug_assert!(num_lines >= 0.0);
-            let num_lines = num_lines as usize;
+            debug_assert!(lines_to_render >= 0.0);
+            let num_lines = lines_to_render as usize;
 
             // The line number in the local rope.
-            let lineno: f64 = (data.rope().char_to_line(data.curser())
+            let local_lineno: f64 = (global_rope.char_to_line(data.curser())
                 - lines_to_remove) as f64;
 
             // self.vscroll is the amount of scrolling done overall.
-            // vscroll is how far up we need to move the text.
+            // local_vscroll is how far up we need to move the text.
             let pixels_removed = lines_to_remove as f64 * line_spacing;
-            let vscroll = self.vscroll - pixels_removed;
-            let text_pos = Point::new(0.0, text_height - vscroll);
-
+            let local_vscroll = self.vscroll - pixels_removed;
+            // TODO: Figure out where this 0.8 comes from
+            let text_height = font_size * 0.8;
+            let text_pos = Point::new(0.0, text_height - local_vscroll);
 
             // Extract the onscrean rope
-            let text_start_idx = data.rope().line_to_char(lines_to_remove);
+            let text_start_idx = global_rope.line_to_char(lines_to_remove);
             let text_end_idx =
-                data.rope().line_to_char(lines_to_remove + num_lines);
-            let displayed_rope =
-                data.rope().slice(text_start_idx..text_end_idx);
-
+                global_rope.line_to_char(lines_to_remove + num_lines);
+            let local_rope = global_rope.slice(text_start_idx..text_end_idx);
+            
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
-            let text_layout = self.get_layout(
-                &mut rc.text(),
-                &displayed_rope.to_string(),
-                env,
-            );
+            let text_layout =
+                self.get_layout(&mut rc.text(), &local_rope.to_string(), env);
 
             //=================================================================
             // Curser
             //=================================================================
 
             // Bytewise index of the curser position in the local rope
-            let text_byte_idx = data.rope().char_to_byte(data.curser())
-                - data.rope().char_to_byte(text_start_idx);
+            let text_byte_idx = global_rope.char_to_byte(data.curser())
+                - global_rope.char_to_byte(text_start_idx);
 
             // Now we get the position of the curser in the text
             let curser_pos = text_layout.hit_test_text_position(text_byte_idx);
 
             // https://github.com/linebender/druid/issues/1105
             // pos.y isn't platform independent, so we use this instead.
-            let topy = lineno * line_spacing - vscroll;
+            let topy = local_lineno * line_spacing - local_vscroll;
             let bottomy = topy + font_size;
 
             // TODO: hot to fall back if pos==None
@@ -119,7 +114,7 @@ impl TextArea {
 
                 // If we're on a newline, the x is from the previous line
                 // TODO: Don't index into the global rope
-                if data.rope().chars_at(data.curser().saturating_sub(1)).next()
+                if global_rope.chars_at(data.curser().saturating_sub(1)).next()
                     == Some('\n')
                 {
                     x = 1.0;
@@ -130,6 +125,7 @@ impl TextArea {
                 let bottom = Point::new(x, bottomy);
                 let line = Line::new(top, bottom);
                 // Draw the curser
+                // TODO: Make width configurable
                 rc.stroke(line, &cursor_color, 1.0)
             }
             // Draw the text
