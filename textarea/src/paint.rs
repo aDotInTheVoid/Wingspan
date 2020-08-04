@@ -26,6 +26,10 @@ impl TextArea {
         data: &EditableText,
         env: &Env,
     ) {
+        //=================================================================
+        // Preamble
+        //=================================================================
+
         // Pull some theme stuff
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
@@ -38,24 +42,21 @@ impl TextArea {
         let clip_rect = ctx.size().to_rect();
         ctx.fill(clip_rect, &background_color);
 
-        // Inside the lambda we make thing's relative to where text is, and not
-        // padding I think?
+        // Move into a save, and render most of the stuff inside of it.
         ctx.with_save(|rc| {
-            // Here we re-adjust the coord system to ignore padding, see above
-            // I think?
             rc.clip(clip_rect);
 
-            // These next 2 lines are a mistery to me.
             // TODO: Figure out where this 0.8 comes from
-            // font_size is the number of "pixels" from top to bottom,
-            // so that makes sense.
             let text_height = font_size * 0.8;
 
-            // The default works for JetBrains Mono.
-            // TODO: sould we log if we have to use the default (ie
-            // get_line_spacing has failed)
+            // TODO: Log an error if we use the default.
+            // This in the top to top spacing
             let line_spacing =
                 self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
+
+            //=================================================================
+            // Partial Rendering Calculatings
+            //=================================================================
 
             // Number of lines to remove from the top.
             // Round down, so lines partialy in display are still rendered
@@ -69,22 +70,23 @@ impl TextArea {
             debug_assert!(num_lines >= 0.0);
             let num_lines = num_lines as usize;
 
-            // 0 indexed from top line number. We can probably cache this,
-            // but this should be quite fast (O(log n)).
+            // The line number in the local rope.
             let lineno: f64 = (data.rope().char_to_line(data.curser())
                 - lines_to_remove) as f64;
 
+            // self.vscroll is the amount of scrolling done overall.
+            // vscroll is how far up we need to move the text.
             let pixels_removed = lines_to_remove as f64 * line_spacing;
             let vscroll = self.vscroll - pixels_removed;
+            let text_pos = Point::new(0.0, text_height - vscroll);
 
+
+            // Extract the onscrean rope
             let text_start_idx = data.rope().line_to_char(lines_to_remove);
             let text_end_idx =
                 data.rope().line_to_char(lines_to_remove + num_lines);
-
             let displayed_rope =
                 data.rope().slice(text_start_idx..text_end_idx);
-
-            dbg!(displayed_rope.to_string(), self.vscroll, vscroll);
 
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
@@ -94,25 +96,19 @@ impl TextArea {
                 env,
             );
 
-            // Now we start trying to draw the curser it is relative to the
-            // text, and that's easier and more robust to do using
-            // the text, rather than assuming monospace and winging
-            // it.
+            //=================================================================
+            // Curser
+            //=================================================================
 
-            // When the text layout doesn't have the whole rope, this will need
-            // to change, but here we convert from ropey'r char based system to
-            // druid's bytes based system.
-
-            //TODO: This will panic if the curser goes outside the area on display.
+            // Bytewise index of the curser position in the local rope
             let text_byte_idx = data.rope().char_to_byte(data.curser())
                 - data.rope().char_to_byte(text_start_idx);
 
             // Now we get the position of the curser in the text
             let curser_pos = text_layout.hit_test_text_position(text_byte_idx);
 
-            // TODO: scrolling
-            // TODO: what is this
-            let text_pos = Point::new(0.0, text_height - vscroll);
+            // https://github.com/linebender/druid/issues/1105
+            // pos.y isn't platform independent, so we use this instead.
             let topy = lineno * line_spacing - vscroll;
             let bottomy = topy + font_size;
 
@@ -121,13 +117,8 @@ impl TextArea {
             if let Some(pos) = curser_pos {
                 let mut x = pos.point.x;
 
-                // https://github.com/linebender/druid/issues/1105
-                // means we can't trust pos.y, so this is the work around
-
-                // If we are just past a newline, the position thinks we're on
-                // the line above, so misreports. Here we abjust
-                // it. y is fine as it is calculated
-                // seperayly from rope data, which gets this right.
+                // If we're on a newline, the x is from the previous line
+                // TODO: Don't index into the global rope
                 if data.rope().chars_at(data.curser().saturating_sub(1)).next()
                     == Some('\n')
                 {
@@ -138,7 +129,6 @@ impl TextArea {
                 let top = Point::new(x, topy);
                 let bottom = Point::new(x, bottomy);
                 let line = Line::new(top, bottom);
-
                 // Draw the curser
                 rc.stroke(line, &cursor_color, 1.0)
             }
