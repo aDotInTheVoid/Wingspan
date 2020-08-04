@@ -87,7 +87,6 @@ impl TextArea {
             let text_layout =
                 self.get_layout(&mut rc.text(), &local_rope.to_string(), env);
 
-
             self.paint_curser(
                 rc,
                 data,
@@ -106,6 +105,8 @@ impl TextArea {
         });
     }
 
+    // TODO: Less args
+    // TODO: Document why we need this
     fn paint_curser(
         &mut self,
         ctx: &mut PaintCtx,
@@ -120,12 +121,18 @@ impl TextArea {
         cursor_color: Color,
     ) -> Option<()> {
         // Bytewise index of the curser position in the local rope
-        let text_byte_idx = global_rope.char_to_byte(data.curser())
-            - global_rope.char_to_byte(text_start_idx);
+        let text_byte_idx = global_rope
+            .char_to_byte(data.curser())
+            .checked_sub(global_rope.char_to_byte(text_start_idx))?;
 
         // The line number in the local rope.
-        let local_lineno: f64 =
-            (global_rope.char_to_line(data.curser()) - lines_to_remove) as f64;
+        let local_lineno =
+            global_rope.char_to_line(data.curser()) - lines_to_remove;
+
+        if local_lineno >= text_layout.line_count() {
+            return None;
+        }
+        let local_lineno = local_lineno as f64;
 
         // Now we get the position of the curser in the text
         let curser_pos = text_layout.hit_test_text_position(text_byte_idx);
