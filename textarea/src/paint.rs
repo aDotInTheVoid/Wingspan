@@ -12,7 +12,7 @@ use druid::{
         FontBuilder, PietText, PietTextLayout, Text, TextLayout,
         TextLayoutBuilder,
     },
-    theme, Color, Env, PaintCtx, Point, RenderContext,
+    theme, Env, PaintCtx, Point, RenderContext,
 };
 
 impl TextArea {
@@ -36,7 +36,6 @@ impl TextArea {
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
         let text_color = env.get(theme::LABEL_COLOR);
-        let cursor_color = env.get(theme::CURSOR_COLOR);
 
         // First we paint the background
         // This is so we can add padding later, see druid::widget::TextBox for
@@ -89,6 +88,7 @@ impl TextArea {
 
             self.paint_curser(
                 rc,
+                env,
                 data,
                 global_rope,
                 text_start_idx,
@@ -97,7 +97,6 @@ impl TextArea {
                 line_spacing,
                 local_vscroll,
                 font_size,
-                cursor_color,
             );
 
             // Draw the text
@@ -105,11 +104,11 @@ impl TextArea {
         });
     }
 
-    // TODO: Less args
-    // TODO: Document why we need this
+    // Returns Some(()) if the curser was rendered, otherwise None
     fn paint_curser(
         &mut self,
         ctx: &mut PaintCtx,
+        env: &Env,
         data: &EditableText,
         global_rope: &ropey::Rope,
         text_start_idx: usize,
@@ -118,9 +117,11 @@ impl TextArea {
         line_spacing: f64,
         local_vscroll: f64,
         font_size: f64,
-        cursor_color: Color,
     ) -> Option<()> {
+        let cursor_color = env.get(theme::CURSOR_COLOR);
+
         // Bytewise index of the curser position in the local rope
+        // If this checked_sub returns None, it means the curser is above the local rope.
         let text_byte_idx = global_rope
             .char_to_byte(data.curser())
             .checked_sub(global_rope.char_to_byte(text_start_idx))?;
@@ -128,7 +129,7 @@ impl TextArea {
         // The line number in the local rope.
         let local_lineno =
             global_rope.char_to_line(data.curser()) - lines_to_remove;
-
+        // If the curser is below whats onsren, dont render it.
         if local_lineno >= text_layout.line_count() {
             return None;
         }
@@ -159,11 +160,14 @@ impl TextArea {
             let top = Point::new(x, topy);
             let bottom = Point::new(x, bottomy);
             let line = Line::new(top, bottom);
+
             // Draw the curser
             // TODO: Make width configurable
-            ctx.stroke(line, &cursor_color, 1.0)
+            ctx.stroke(line, &cursor_color, 1.0);
+
+            return Some(());
         }
-        Some(())
+        None
     }
 
     fn get_layout(
