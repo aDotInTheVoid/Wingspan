@@ -14,6 +14,7 @@ use druid::{
     },
     theme, Env, PaintCtx, Point, RenderContext,
 };
+use std::cmp::min;
 
 impl TextArea {
     /// Main entry point to the paint system.
@@ -58,12 +59,12 @@ impl TextArea {
             let lines_to_render = lines_to_render as usize;
 
             // Make sure the vscroll doesn't go over the edge.
-            if self.vscroll
-                > line_spacing
-                    * (global_rope.len_lines() - lines_to_render) as f64
+            if let Some(lines_under) =
+                global_rope.len_lines().checked_sub(lines_to_render)
             {
-                self.vscroll = line_spacing
-                    * (global_rope.len_lines() - lines_to_render) as f64
+                if self.vscroll > line_spacing * lines_under as f64 {
+                    self.vscroll = line_spacing * lines_under as f64
+                }
             }
 
             //=================================================================
@@ -88,8 +89,10 @@ impl TextArea {
 
             // Extract the onscrean rope
             let text_start_idx = global_rope.line_to_char(lines_to_remove);
-            let text_end_idx =
-                global_rope.line_to_char(lines_to_remove + lines_to_render);
+            let text_end_idx = global_rope.line_to_char(min(
+                lines_to_remove + lines_to_render,
+                global_rope.len_lines(),
+            ));
             let local_rope = global_rope.slice(text_start_idx..text_end_idx);
 
             // Next we generate the `text_layout`, which is the text + the

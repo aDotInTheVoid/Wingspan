@@ -99,7 +99,7 @@ impl EditableText {
     }
 
     pub fn from_reader<T: io::Read>(reader: T) -> io::Result<Self> {
-        Ok(Self{
+        Ok(Self {
             text: Rope::from_reader(reader)?,
             cursur: 0,
         })
