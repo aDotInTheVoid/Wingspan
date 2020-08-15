@@ -52,18 +52,25 @@ impl TextArea {
             let line_spacing =
                 self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
 
-            // The number of lines on the screen.
+            // The maximum number of lines that can on the screen.
             // We round up, as we want to include lines partialy on the screen
-            let lines_to_render = (rc.size().height / line_spacing).ceil();
-            debug_assert!(lines_to_render >= 0.0);
-            let lines_to_render = lines_to_render as usize;
+            let max_lines_onscreen = (rc.size().height / line_spacing).ceil();
+            debug_assert!(max_lines_onscreen >= 0.0);
+            let max_lines_onscreen = max_lines_onscreen as usize;
 
-            // Make sure the vscroll doesn't go over the edge.
-            if let Some(lines_under) =
-                global_rope.len_lines().checked_sub(lines_to_render)
-            {
-                if self.vscroll > line_spacing * lines_under as f64 {
-                    self.vscroll = line_spacing * lines_under as f64
+            // Ensure their is text on screen
+            match global_rope.len_lines().checked_sub(max_lines_onscreen) {
+                Some(lines_above_fold) => {
+                    let pix_above_fold = line_spacing * lines_above_fold as f64;
+                    // Float isn't Ord, can't use min.
+                    if self.vscroll > pix_above_fold {
+                        self.vscroll = pix_above_fold
+                    }
+                }
+                // More lines onscrean than in the global rope, so dont scroll.
+                None => {
+                    self.vscroll = 0.0;
+                    panic!();
                 }
             }
 
@@ -90,7 +97,7 @@ impl TextArea {
             // Extract the onscrean rope
             let text_start_idx = global_rope.line_to_char(lines_to_remove);
             let text_end_idx = global_rope.line_to_char(min(
-                lines_to_remove + lines_to_render,
+                lines_to_remove + max_lines_onscreen,
                 global_rope.len_lines(),
             ));
             let local_rope = global_rope.slice(text_start_idx..text_end_idx);
@@ -135,7 +142,8 @@ impl TextArea {
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
         // Bytewise index of the curser position in the local rope
-        // If this checked_sub returns None, it means the curser is above the local rope.
+        // If this checked_sub returns None, it means the curser is above the
+        // local rope.
         let text_byte_idx = global_rope
             .char_to_byte(data.curser())
             .checked_sub(global_rope.char_to_byte(text_start_idx))?;
