@@ -11,7 +11,9 @@ license = "Apache-2.0"
 [dependencies]
 druid = "0.6.0"
 textedit = {path = "../textedit", features=["druid"]}
+color-eyre = "0.5"
 
 [dependencies.ropey]
 git = "https://github.com/aDotInTheVoid/ropey/"
 rev =  "653048c"
+
