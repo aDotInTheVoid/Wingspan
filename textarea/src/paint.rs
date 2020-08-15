@@ -70,7 +70,6 @@ impl TextArea {
                 // More lines onscrean than in the global rope, so dont scroll.
                 None => {
                     self.vscroll = 0.0;
-                    panic!();
                 }
             }
 
