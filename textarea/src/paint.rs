@@ -126,6 +126,9 @@ impl TextArea {
     }
 
     // Returns Some(()) if the curser was rendered, otherwise None
+    // TODO: Fewer args. It uses a load of stuff from paint_internal, but needs
+    // to be seperate to do the ? sugar.
+    #[allow(clippy::too_many_arguments)]
     fn paint_curser(
         &mut self,
         ctx: &mut PaintCtx,
