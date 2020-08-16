@@ -39,7 +39,6 @@ impl Widget<EditableText> for TextArea {
         match event {
             Event::KeyDown(key_event) => {
                 use druid::KeyCode::*;
-
                 match key_event.key_code {
                     ArrowLeft => data.left(),
                     ArrowRight => data.right(),

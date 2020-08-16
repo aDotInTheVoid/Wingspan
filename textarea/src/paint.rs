@@ -117,6 +117,7 @@ impl TextArea {
                 line_spacing,
                 local_vscroll,
                 font_size,
+                local_rope.len_bytes(),
             );
 
             // Draw the text
@@ -140,6 +141,7 @@ impl TextArea {
         line_spacing: f64,
         local_vscroll: f64,
         font_size: f64,
+        local_len: usize,
     ) -> Option<()> {
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
@@ -149,6 +151,12 @@ impl TextArea {
         let text_byte_idx = global_rope
             .char_to_byte(data.curser())
             .checked_sub(global_rope.char_to_byte(text_start_idx))?;
+
+        // TODO: Check before call, calculate text_byte_idx in caller
+        // TODO: why?
+        if local_len < text_byte_idx {
+            return None;
+        }
 
         // The line number in the local rope.
         let local_lineno =
