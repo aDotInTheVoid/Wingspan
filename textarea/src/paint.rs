@@ -27,16 +27,19 @@ impl TextArea {
         data: &EditableText,
         env: &Env,
     ) {
-        //=================================================================
-        // Preamble
-        //=================================================================
-
+        ///////////////////////////////////////////////////////////////////////
+        //// Preamble: Pull random Vars
+        ///////////////////////////////////////////////////////////////////////
         let global_rope = data.rope();
 
-        // Pull some theme stuff
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
         let text_color = env.get(theme::LABEL_COLOR);
+        let cursor_color = env.get(theme::CURSOR_COLOR);
+
+        ///////////////////////////////////////////////////////////////////////
+        //// Background & Padding
+        ///////////////////////////////////////////////////////////////////////
 
         // First we paint the background
         // This is so we can add padding later, see druid::widget::TextBox for
@@ -46,8 +49,12 @@ impl TextArea {
 
         // Move into a save, and render most of the stuff inside of it.
         ctx.with_save(|rc| {
-            // TODO: Make this nicer
             rc.clip(clip_rect);
+
+            ///////////////////////////////////////////////////////////////////////
+            //// Local Rope Extraction
+            ///////////////////////////////////////////////////////////////////////
+
             // TODO: Log an error if we use the default.
             // This in the top to top spacing
             let line_spacing =
@@ -77,7 +84,6 @@ impl TextArea {
             // Number of lines to remove from the top.
             // Round down, so lines partialy in display are still rendered
             let lines_to_remove = (self.vscroll / line_spacing).floor();
-
             // Check nothing is castastrophicly wrong, and then cast to an int.
             debug_assert!(lines_to_remove >= 0.0);
             let lines_to_remove = lines_to_remove as usize;
@@ -98,71 +104,71 @@ impl TextArea {
             ));
             let local_rope = global_rope.slice(text_start_idx..text_end_idx);
 
+            ///////////////////////////////////////////////////////////////////
+            //// Text Layout
+            ///////////////////////////////////////////////////////////////////
+
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
             let text_layout =
                 self.get_layout(&mut rc.text(), &local_rope.to_string(), env);
 
+            ///////////////////////////////////////////////////////////////////
+            //// Curser
+            ///////////////////////////////////////////////////////////////////
+
             // Bytewise index of the curser position in the local rope
             // If this checked_sub returns None, it means the curser is above
             // the local rope.
-            let text_byte_idx = global_rope
+            if let Some(text_byte_idx) = global_rope
                 .char_to_byte(data.curser())
-                .checked_sub(global_rope.char_to_byte(text_start_idx));
-            if let Some(tbi) = text_byte_idx {
+                .checked_sub(global_rope.char_to_byte(text_start_idx))
+            {
                 let local_len = local_rope.len_bytes();
 
                 // The line number in the local rope.
                 let local_lineno =
                     global_rope.char_to_line(data.curser()) - lines_to_remove;
 
-                let newline = global_rope
-                    .chars_at(data.curser().saturating_sub(1))
-                    .next()
-                    == Some('\n');
-
-                if local_len >= tbi {
-                    // TODO: Store if we paint the curser
-                    let cursor_color = env.get(theme::CURSOR_COLOR);
-
-                    // If the curser is below whats onsren, dont render it.
-                    if local_lineno < text_layout.line_count() {
+                // Check the curser is onscreen
+                if local_len >= text_byte_idx
+                    && local_lineno < text_layout.line_count()
+                {
+                    // Now we get the position of the curser in the text
+                    if let Some(pos) =
+                        text_layout.hit_test_text_position(text_byte_idx)
+                    {
                         let local_lineno = local_lineno as f64;
 
-                        // Now we get the position of the curser in the text
-                        let post = text_layout.hit_test_text_position(tbi);
+                        // https://github.com/linebender/druid/issues/1105
+                        // pos.y isn't platform independent, so we use this
+                        // instead.
+                        let top_y = local_lineno * line_spacing - local_vscroll;
+                        let bottom_y = top_y + font_size;
+                        let mut x = pos.point.x;
 
-                        if let Some(pos) = post {
-                            // https://github.com/linebender/druid/issues/1105
-                            // pos.y isn't platform independent, so we use this
-                            // instead.
-                            let topy =
-                                local_lineno * line_spacing - local_vscroll;
-                            let bottomy = topy + font_size;
-
-                            let mut x = pos.point.x;
-
-                            // If we're on a newline, the x is from the previous
-                            // line TODO: Don't
-                            // index into the global rope
-                            if newline {
-                                x = 1.0;
-                            }
-
-                            // Create the curser line
-                            let top = Point::new(x, topy);
-                            let bottom = Point::new(x, bottomy);
-                            let line = Line::new(top, bottom);
-
-                            // Draw the curser
-                            // TODO: Make width configurable
-                            rc.stroke(line, &cursor_color, 1.0);
+                        // If we're on a newline, the x is from the previous
+                        // line. TODO: Index the local rope instead
+                        if global_rope
+                            .chars_at(data.curser().saturating_sub(1))
+                            .next()
+                            == Some('\n')
+                        {
+                            x = 1.0;
                         }
+
+                        ///////////////////////////////////////////////////
+                        //// Drawing
+                        ///////////////////////////////////////////////////
+
+                        let top = Point::new(x, top_y);
+                        let bottom = Point::new(x, bottom_y);
+                        let line = Line::new(top, bottom);
+                        // TODO: Make width configurable
+                        rc.stroke(line, &cursor_color, 1.0);
                     }
                 }
             }
-
-            // Draw the text
             rc.draw_text(&text_layout, text_pos, &text_color);
         });
     }
