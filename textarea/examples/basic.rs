@@ -16,14 +16,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         .title(WINDOW_TITLE)
         .window_size((400.0, 400.0));
 
-    print!("Which file to open: ");
-    io::stdout().flush()?;
-    let mut file_string = String::new();
-    io::stdin().read_line(&mut file_string)?;
+    let path = match std::env::args().nth(1) {
+        Some(t) => t,
+        None => {
+            print!("Which file to open: ");
+            io::stdout().flush()?;
+            let mut file_string = String::new();
+            io::stdin().read_line(&mut file_string)?;
+            file_string
+        }
+    };
 
-    let data = EditableText::from_reader(BufReader::new(File::open(
-        file_string.trim(),
-    )?))?;
+    let data = EditableText::from_reader(BufReader::new(File::open(path)?))?;
 
     AppLauncher::with_window(main)
         .launch(data)
