@@ -1,3 +1,5 @@
+#![warn(clippy::all, rust_2018_idioms)]
+
 // All of this is so naive.
 // https://github.com/linebender/druid/blob/v0.6.0/druid/src/widget/textbox.rs
 // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
@@ -28,7 +30,7 @@ impl Widget<EditableText> for TextArea {
     /// Here is where we can edit the rope
     fn event(
         &mut self,
-        ctx: &mut EventCtx,
+        ctx: &mut EventCtx<'_, '_>,
         event: &Event,
         data: &mut EditableText,
         _env: &Env,
@@ -84,7 +86,7 @@ impl Widget<EditableText> for TextArea {
     // TODO: Should we be doing something here?
     fn lifecycle(
         &mut self,
-        ctx: &mut LifeCycleCtx,
+        ctx: &mut LifeCycleCtx<'_, '_>,
         event: &LifeCycle,
         _data: &EditableText,
         _env: &Env,
@@ -98,7 +100,7 @@ impl Widget<EditableText> for TextArea {
     // Do internal state stuff.
     fn update(
         &mut self,
-        ctx: &mut UpdateCtx,
+        ctx: &mut UpdateCtx<'_, '_>,
         _old_data: &EditableText,
         _data: &EditableText,
         _env: &Env,
@@ -110,7 +112,7 @@ impl Widget<EditableText> for TextArea {
     // Get the size of the widget.
     fn layout(
         &mut self,
-        _ctx: &mut LayoutCtx,
+        _ctx: &mut LayoutCtx<'_, '_>,
         bc: &BoxConstraints,
         _data: &EditableText,
         _env: &Env,
@@ -119,7 +121,12 @@ impl Widget<EditableText> for TextArea {
     }
 
     // Rendering is in a seperate file for consiseness.
-    fn paint(&mut self, ctx: &mut PaintCtx, data: &EditableText, env: &Env) {
+    fn paint(
+        &mut self,
+        ctx: &mut PaintCtx<'_, '_, '_>,
+        data: &EditableText,
+        env: &Env,
+    ) {
         self.paint_internal(ctx, data, env);
     }
 }

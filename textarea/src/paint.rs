@@ -23,7 +23,7 @@ impl TextArea {
     /// placed in a seperate function so the lib.rs can be smaller.
     pub(crate) fn paint_internal(
         &mut self,
-        ctx: &mut PaintCtx,
+        ctx: &mut PaintCtx<'_, '_, '_>,
         data: &EditableText,
         env: &Env,
     ) {
@@ -175,7 +175,7 @@ impl TextArea {
 
     fn get_layout(
         &self,
-        piet_text: &mut PietText,
+        piet_text: &mut PietText<'_>,
         text: &str,
         env: &Env,
     ) -> PietTextLayout {
@@ -201,7 +201,7 @@ impl TextArea {
     // now.
     fn get_line_spacing(
         &self,
-        piet_text: &mut PietText,
+        piet_text: &mut PietText<'_>,
         env: &Env,
     ) -> Option<f64> {
         let layout = self.get_layout(piet_text, "12\n45", env);
