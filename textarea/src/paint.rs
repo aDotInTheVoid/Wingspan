@@ -14,6 +14,7 @@ use druid::{
     },
     theme, Env, PaintCtx, Point, RenderContext,
 };
+use std::cmp::min;
 
 impl TextArea {
     /// Main entry point to the paint system.
@@ -22,15 +23,23 @@ impl TextArea {
     /// placed in a seperate function so the lib.rs can be smaller.
     pub(crate) fn paint_internal(
         &mut self,
-        ctx: &mut PaintCtx,
+        ctx: &mut PaintCtx<'_, '_, '_>,
         data: &EditableText,
         env: &Env,
     ) {
-        // Pull some theme stuff
+        ///////////////////////////////////////////////////////////////////////
+        //// Preamble: Pull random Vars
+        ///////////////////////////////////////////////////////////////////////
+        let global_rope = data.rope();
+
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
         let text_color = env.get(theme::LABEL_COLOR);
         let cursor_color = env.get(theme::CURSOR_COLOR);
+
+        ///////////////////////////////////////////////////////////////////////
+        //// Background & Padding
+        ///////////////////////////////////////////////////////////////////////
 
         // First we paint the background
         // This is so we can add padding later, see druid::widget::TextBox for
@@ -38,102 +47,135 @@ impl TextArea {
         let clip_rect = ctx.size().to_rect();
         ctx.fill(clip_rect, &background_color);
 
-        // Inside the lambda we make thing's relative to where text is, and not
-        // padding I think?
+        // Move into a save, and render most of the stuff inside of it.
         ctx.with_save(|rc| {
-            // Here we re-adjust the coord system to ignore padding, see above
-            // I think?
             rc.clip(clip_rect);
 
-            // These next 2 lines are a mistery to me.
+            ///////////////////////////////////////////////////////////////////////
+            //// Local Rope Extraction
+            ///////////////////////////////////////////////////////////////////////
+
+            // TODO: Log an error if we use the default.
+            // This in the top to top spacing
+            let line_spacing =
+                self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
+
+            // The maximum number of lines that can on the screen.
+            // We round up, as we want to include lines partialy on the screen
+            let max_lines_onscreen = (rc.size().height / line_spacing).ceil();
+            debug_assert!(max_lines_onscreen >= 0.0);
+            let max_lines_onscreen = max_lines_onscreen as usize;
+
+            // Ensure their is text on screen
+            match global_rope.len_lines().checked_sub(max_lines_onscreen) {
+                Some(lines_above_fold) => {
+                    let pix_above_fold = line_spacing * lines_above_fold as f64;
+                    // Float isn't Ord, can't use min.
+                    if self.vscroll > pix_above_fold {
+                        self.vscroll = pix_above_fold
+                    }
+                }
+                // More lines onscrean than in the global rope, so dont scroll.
+                None => {
+                    self.vscroll = 0.0;
+                }
+            }
+
+            // Number of lines to remove from the top.
+            // Round down, so lines partialy in display are still rendered
+            let lines_to_remove = (self.vscroll / line_spacing).floor();
+            // Check nothing is castastrophicly wrong, and then cast to an int.
+            debug_assert!(lines_to_remove >= 0.0);
+            let lines_to_remove = lines_to_remove as usize;
+
+            // self.vscroll is the amount of scrolling done overall.
+            // local_vscroll is how far up we need to move the text.
+            let pixels_removed = lines_to_remove as f64 * line_spacing;
+            let local_vscroll = self.vscroll - pixels_removed;
             // TODO: Figure out where this 0.8 comes from
-            // font_size is the number of "pixels" from top to bottom,
-            // so that makes sense.
             let text_height = font_size * 0.8;
-            // TODO: scrolling
-            // TODO: what is this
-            let text_pos = Point::new(0.0, text_height);
+            let text_pos = Point::new(0.0, text_height - local_vscroll);
+
+            // Extract the onscrean rope
+            let text_start_idx = global_rope.line_to_char(lines_to_remove);
+            let text_end_idx = global_rope.line_to_char(min(
+                lines_to_remove + max_lines_onscreen,
+                global_rope.len_lines(),
+            ));
+            let local_rope = global_rope.slice(text_start_idx..text_end_idx);
+
+            ///////////////////////////////////////////////////////////////////
+            //// Text Layout
+            ///////////////////////////////////////////////////////////////////
 
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
-            //
-            // TODO: Only pull the bit of the
-            // rope that's on screen. This is super wastefull, as we
-            // do a full copy out of the rope to render but we need
-            // to convert to string before we sent it into druid so
-            // what we should do it see what needs to be painted (ie
-            // is onscrean) and only copy that.
             let text_layout =
-                self.get_layout(&mut rc.text(), &data.to_string(), env);
+                self.get_layout(&mut rc.text(), &local_rope.to_string(), env);
 
-            // Now we start trying to draw the curser it is relative to the
-            // text, and that's easier and more robust to do using
-            // the text, rather than assuming monospace and winging
-            // it.
+            ///////////////////////////////////////////////////////////////////
+            //// Curser
+            ///////////////////////////////////////////////////////////////////
 
-            // When the text layout doesn't have the whole rope, this will need
-            // to change, but here we convert from ropey'r char based system to
-            // druid's bytes based system.
-            let text_byte_idx = data.rope().char_to_byte(data.curser());
+            // Bytewise index of the curser position in the local rope
+            // If this checked_sub returns None, it means the curser is above
+            // the local rope.
+            if let Some(text_byte_idx) = global_rope
+                .char_to_byte(data.curser())
+                .checked_sub(global_rope.char_to_byte(text_start_idx))
+            {
+                let local_len = local_rope.len_bytes();
 
-            // Now we get the position of the curser in the text
-            let pos = text_layout.hit_test_text_position(text_byte_idx);
+                // The line number in the local rope.
+                let local_lineno =
+                    global_rope.char_to_line(data.curser()) - lines_to_remove;
 
-            // TODO: hot to fall back if pos==None
-            // that'll happen if the rope is empty, and maybe other reasons
-            if let Some(pos) = pos {
-                let mut x = pos.point.x;
-
-                // 0 indexed from top line number. We can probably cache this,
-                // but this should be quite fast (O(log n)).
-                let lineno: f64 =
-                    data.rope().char_to_line(data.curser()) as f64;
-
-                // https://github.com/linebender/druid/issues/1105
-                // means we can't trust pos.y, so this is the work around
-
-                // magic_number is the spacing between the top of one line and
-                // the bottom of the next. Here we find manualy where the text
-                // top and bottom is based on reversing the table in the
-                // get_magic method. That table was from an old version that
-                // only ran on gtk
-                // https://github.com/aDotInTheVoid/Wingspan/blob/dff1b3207154fe1f63056c40b0b3eff8c1dd18cc/textarea/src/lib.rs#L169-L181
-
-                // The default works for JetBrains Mono.
-                // TODO: sould we log if we have to use the default (ie
-                // get_magic has failed)
-                let magic_number =
-                    self.get_magic(&mut rc.text(), env).unwrap_or(4.0);
-                let line_spacing = font_size + magic_number;
-                let topy = lineno * line_spacing;
-                let bottomy = ((lineno + 1.0) * line_spacing) - magic_number;
-
-                // If we are just past a newline, the position thinks we're on
-                // the line above, so misreports. Here we abjust
-                // it. y is fine as it is calculated
-                // seperayly from rope data, which gets this right.
-                if data.rope().chars_at(data.curser().saturating_sub(1)).next()
-                    == Some('\n')
+                // Check the curser is onscreen
+                if local_len >= text_byte_idx
+                    && local_lineno < text_layout.line_count()
                 {
-                    x = 1.0;
+                    // Now we get the position of the curser in the text
+                    if let Some(pos) =
+                        text_layout.hit_test_text_position(text_byte_idx)
+                    {
+                        let local_lineno = local_lineno as f64;
+
+                        // https://github.com/linebender/druid/issues/1105
+                        // pos.y isn't platform independent, so we use this
+                        // instead.
+                        let top_y = local_lineno * line_spacing - local_vscroll;
+                        let bottom_y = top_y + font_size;
+                        let mut x = pos.point.x;
+
+                        // If we're on a newline, the x is from the previous
+                        // line. TODO: Index the local rope instead
+                        if global_rope
+                            .chars_at(data.curser().saturating_sub(1))
+                            .next()
+                            == Some('\n')
+                        {
+                            x = 1.0;
+                        }
+
+                        ///////////////////////////////////////////////////
+                        //// Drawing
+                        ///////////////////////////////////////////////////
+
+                        let top = Point::new(x, top_y);
+                        let bottom = Point::new(x, bottom_y);
+                        let line = Line::new(top, bottom);
+                        // TODO: Make width configurable
+                        rc.stroke(line, &cursor_color, 1.0);
+                    }
                 }
-
-                // Create the curser line
-                let top = Point::new(x, topy);
-                let bottom = Point::new(x, bottomy);
-                let line = Line::new(top, bottom);
-
-                // Draw the curser
-                rc.stroke(line, &cursor_color, 1.0)
             }
-            // Draw the text
             rc.draw_text(&text_layout, text_pos, &text_color);
         });
     }
 
     fn get_layout(
         &self,
-        piet_text: &mut PietText,
+        piet_text: &mut PietText<'_>,
         text: &str,
         env: &Env,
     ) -> PietTextLayout {
@@ -154,22 +196,17 @@ impl TextArea {
             .unwrap()
     }
 
-    // Font size: 15
-    // Text height: 12
-    // Line | Bottom y | Top y
-    // -----|----------|------
-    // 0    | 0        | 15
-    // 1    | 19       | 34
-    // 2    | 38       | 53
-    // on macOS with JetBrains mono
-    // Calculate the top and bottom y coords
-    // TODO: figure out where this number is from
-    // I got it by debuging  pos.point.y (see table above)
-    fn get_magic(&self, piet_text: &mut PietText, env: &Env) -> Option<f64> {
+    // Line spacing is the difference between the top of one line and the top of
+    // another. Their's probably a better way to get it, but this works for
+    // now.
+    fn get_line_spacing(
+        &self,
+        piet_text: &mut PietText<'_>,
+        env: &Env,
+    ) -> Option<f64> {
         let layout = self.get_layout(piet_text, "12\n45", env);
         let top = layout.hit_test_text_position(1)?.point.y;
         let bottom = layout.hit_test_text_position(4)?.point.y;
-        let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        Some(bottom - top - font_size)
+        Some(bottom - top)
     }
 }

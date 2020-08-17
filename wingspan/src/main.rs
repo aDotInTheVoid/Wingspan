@@ -1,3 +1,4 @@
+#![warn(clippy::all, rust_2018_idioms)]
 use druid::widget::{Button, Flex, Label, TextBox};
 use druid::{
     AppLauncher, Data, Lens, LocalizedString, Widget, WidgetExt, WindowDesc,
