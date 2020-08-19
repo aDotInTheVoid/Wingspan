@@ -9,8 +9,6 @@ license = "Apache-2.0"
 
 [dependencies]
 ropey = { path = "../ropey" }
+druid = { path = "../druid" }
 
-[dependencies.druid]
-# TODO: Allow for usage without druid
-git = "https://github.com/linebender/druid"
-rev="8600e42"
+

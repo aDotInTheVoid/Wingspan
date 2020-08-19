@@ -19,6 +19,4 @@ categories = ["text-editors"]
 # structopt = "0.3.14"
 # ropey = "1.1.0"
 # log = "0.4.8"
-[dependencies.druid]
-git = "https://github.com/linebender/druid"
-rev="8600e42"
+druid = { path = "../druid" }

@@ -12,9 +12,5 @@ license = "Apache-2.0"
 
 textedit = {path = "../textedit"}
 ropey = { path = "../ropey" }
+druid = { path = "../druid" }
 color-eyre = "0.5"
-
-[dependencies.druid]
-git = "https://github.com/linebender/druid"
-rev="8600e42"
-#branch = "public-test-hack"

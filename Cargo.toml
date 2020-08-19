@@ -4,6 +4,7 @@ members = [
     "textarea",
     "textedit",
     "ropey",
+    "druid",
 ]
 
 

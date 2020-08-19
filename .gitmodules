@@ -2,3 +2,6 @@
 	path = ropey
 	url = https://github.com/aDotInTheVoid/ropey/
 	branch = wingspan
+[submodule "druid"]
+	path = druid
+	url = https://github.com/aDotInTheVoid/druid/
