@@ -1,0 +1,3 @@
+[alias]
+fm = "fmt -p textarea wingspan textedit"
+cl = "clippy --exclude ropey --workspace"
