@@ -1,0 +1,4 @@
+[submodule "ropey"]
+	path = ropey
+	url = https://github.com/aDotInTheVoid/ropey/
+	branch = wingspan
