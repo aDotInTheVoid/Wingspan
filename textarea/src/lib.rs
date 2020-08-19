@@ -1,3 +1,16 @@
+// Copyright 2020 The Wingspan Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #![warn(clippy::all, rust_2018_idioms)]
 
 // All of this is so naive.
@@ -40,8 +53,8 @@ impl Widget<EditableText> for TextArea {
 
         match event {
             Event::KeyDown(key_event) => {
-                use druid::KeyCode::*;
-                match key_event.key_code {
+                use druid::keyboard_types::Key::*;
+                match &key_event.key {
                     ArrowLeft => data.left(),
                     ArrowRight => data.right(),
 
@@ -58,17 +71,14 @@ impl Widget<EditableText> for TextArea {
                     }
 
                     // No CRLF, fight me
-                    Return => data.insert('\n'),
-
-                    // https://github.com/linebender/druid/blob/v0.6.0/druid/src/text/text_input.rs
-                    key_code if key_code.is_printable() => {
-                        if let Some(txt) = key_event.text() {
-                            //TODO: see if their is a nicer rope way to do this
-                            for i in txt.chars() {
-                                data.insert(i);
-                            }
+                    Enter => data.insert('\n'),
+                    Character(chars) => {
+                        //TODO: Surely there is a better way
+                        for i in chars.chars() {
+                            data.insert(i);
                         }
                     }
+
                     _ => {}
                 }
                 ctx.request_paint()
