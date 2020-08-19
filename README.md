@@ -13,7 +13,8 @@ It uses [druid](https://github.com/xi-editor/druid) for cross platform UI, and
 - [`textedit`](./textedit) implements the core text editing logic. 
 - [`textarea`](./textarea) renders textedit's logic as a druid widget.
 - [`wingspan`](./wingspan) creates the UI around the text editor.
-
+- [`ropey`](./ropey) contains a vendored fork of the [ropey](https://github.com/cessen/ropey) crate
+- [`druid`](./druid) contains a vendored fork of the [ropey](https://github.com/aDotInTheVoid/druid/) crate
 
 ## Status
 
