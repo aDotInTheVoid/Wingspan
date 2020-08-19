@@ -9,9 +9,14 @@ license = "Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-druid = "0.6.0"
-textedit = {path = "../textedit", features=["druid"]}
+
+textedit = {path = "../textedit"}
 color-eyre = "0.5"
+
+[dependencies.druid]
+git = "https://github.com/linebender/druid"
+rev="8600e42"
+#branch = "public-test-hack"
 
 [dependencies.ropey]
 git = "https://github.com/aDotInTheVoid/ropey/"

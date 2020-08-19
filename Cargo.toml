@@ -3,6 +3,7 @@ members = [
     "wingspan",
     "textarea",
     "textedit",
+    "ropey",
 ]
 
 
