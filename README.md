@@ -1,6 +1,12 @@
 # Wingspan
 ![build](https://github.com/aDotInTheVoid/Wingspan/workflows/build/badge.svg)
 
+## Quick start
+```bash
+git clone --recurse-submodules https://github.com/aDotInTheVoid/wingspan/
+cargo run --example basic -- ./Cargo.toml 
+```
+
 ![](./assets/Logo.png)
 
 Wingspan is an experimental text editor.
@@ -17,7 +23,7 @@ It uses [druid](https://github.com/xi-editor/druid) for cross platform UI, and
 
 ## Status
 
-A very basic text editor existes in [`textarea/examples/basic.rs`](textarea/examples/basic.rs). 
+A very basic text editor exists in [`textarea/examples/basic.rs`](textarea/examples/basic.rs). 
 
 ## License
 
