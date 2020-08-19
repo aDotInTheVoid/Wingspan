@@ -11,14 +11,10 @@ license = "Apache-2.0"
 [dependencies]
 
 textedit = {path = "../textedit"}
+ropey = { path = "../ropey" }
 color-eyre = "0.5"
 
 [dependencies.druid]
 git = "https://github.com/linebender/druid"
 rev="8600e42"
 #branch = "public-test-hack"
-
-[dependencies.ropey]
-git = "https://github.com/aDotInTheVoid/ropey/"
-rev =  "653048c"
-

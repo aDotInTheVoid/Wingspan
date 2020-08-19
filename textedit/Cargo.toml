@@ -14,10 +14,3 @@ ropey = { path = "../ropey" }
 # TODO: Allow for usage without druid
 git = "https://github.com/linebender/druid"
 rev="8600e42"
-
-
-
-
-
-
-

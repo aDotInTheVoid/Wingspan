@@ -348,29 +348,8 @@ version = "0.6.0"
 source = "git+https://github.com/linebender/druid?rev=8600e42#8600e423b132c36b4ee23ed6a4998cc1b19554da"
 dependencies = [
  "console_log",
- "druid-derive 0.3.1 (git+https://github.com/linebender/druid?rev=8600e42)",
- "druid-shell 0.6.0 (git+https://github.com/linebender/druid?rev=8600e42)",
- "fluent-bundle",
- "fluent-langneg",
- "fluent-syntax",
- "fnv",
- "instant",
- "log",
- "simple_logger",
- "unic-langid",
- "unicode-segmentation",
- "xi-unicode",
-]
-
-[[package]]
-name = "druid"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f4b259ffca57f018990c2eac38b4b095811ae77b6387a1ce0a13a89e6eda4058"
-dependencies = [
- "console_log",
- "druid-derive 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "druid-shell 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "druid-derive",
+ "druid-shell",
  "fluent-bundle",
  "fluent-langneg",
  "fluent-syntax",
@@ -387,17 +366,6 @@ dependencies = [
 name = "druid-derive"
 version = "0.3.1"
 source = "git+https://github.com/linebender/druid?rev=8600e42#8600e423b132c36b4ee23ed6a4998cc1b19554da"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "druid-derive"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b53703b0938df4629bdd2c2b91cac35bb5a7a6ed6d18704099ff3c37beb9346"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -426,40 +394,6 @@ dependencies = [
  "instant",
  "js-sys",
  "keyboard-types",
- "kurbo",
- "lazy_static",
- "log",
- "objc",
- "piet-common",
- "time",
- "wasm-bindgen",
- "web-sys",
- "winapi",
- "wio",
-]
-
-[[package]]
-name = "druid-shell"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6da6ec49be2a815bd553c0af453043625841441c405a33e6e2d51c9a5acfe59b"
-dependencies = [
- "anyhow",
- "bitflags",
- "cairo-rs",
- "cfg-if",
- "cocoa",
- "core-graphics",
- "foreign-types",
- "gdk",
- "gdk-sys",
- "gio",
- "glib",
- "glib-sys",
- "gtk",
- "gtk-sys",
- "instant",
- "js-sys",
  "kurbo",
  "lazy_static",
  "log",
@@ -1464,18 +1398,9 @@ dependencies = [
 [[package]]
 name = "ropey"
 version = "1.2.0"
-source = "git+https://github.com/aDotInTheVoid/ropey/?rev=653048c#653048c05b4b067631397f136f4bf034e6c37a8e"
-dependencies = [
- "druid 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "smallvec",
-]
-
-[[package]]
-name = "ropey"
-version = "1.2.0"
 dependencies = [
  "bencher",
- "druid 0.6.0 (git+https://github.com/linebender/druid?rev=8600e42)",
+ "druid",
  "proptest",
  "rand 0.7.3",
  "smallvec",
@@ -1696,8 +1621,8 @@ name = "textarea"
 version = "0.1.0"
 dependencies = [
  "color-eyre",
- "druid 0.6.0 (git+https://github.com/linebender/druid?rev=8600e42)",
- "ropey 1.2.0 (git+https://github.com/aDotInTheVoid/ropey/?rev=653048c)",
+ "druid",
+ "ropey",
  "textedit",
 ]
 
@@ -1705,8 +1630,8 @@ dependencies = [
 name = "textedit"
 version = "0.1.0"
 dependencies = [
- "druid 0.6.0 (git+https://github.com/linebender/druid?rev=8600e42)",
- "ropey 1.2.0",
+ "druid",
+ "ropey",
 ]
 
 [[package]]
@@ -1964,7 +1889,7 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 name = "wingspan"
 version = "0.1.0"
 dependencies = [
- "druid 0.6.0 (git+https://github.com/linebender/druid?rev=8600e42)",
+ "druid",
 ]
 
 [[package]]
