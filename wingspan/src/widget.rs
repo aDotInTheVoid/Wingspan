@@ -109,3 +109,18 @@ impl Widget<Buffer> for EditWidget {
         self.paint_internal(ctx, data, env);
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use druid::{tests::harness::Harness, WidgetExt};
+    #[test]
+    fn default_state_is_empty() {
+        let widget = EditWidget { vscroll: 0.0 }.with_id(WidgetId::next());
+
+        Harness::create_simple(Buffer::new(), widget, |harness| {
+            harness.send_initial_events();
+            assert_eq!(harness.data().to_string(), "");
+        });
+    }
+}

@@ -5,5 +5,5 @@ members = [
 ]
 
 [patch.crates-io]
-druid = { git = "https://github.com/linebender/druid", rev = "1e28dcf" }
+druid = { git = "https://github.com/adotinthevoid/druid/", branch = "public-test-hack" }
 ropey = { git = "https://github.com/aDotInTheVoid/ropey/", branch = "omicoron" }
