@@ -1,48 +1,16 @@
-#![warn(clippy::all, rust_2018_idioms)]
-/*!
-The text editing compontent.
-
-This is not
-- An efficent text storage data structure. That is handled by a [ropey](https://github.com/cessen/ropey)
-  [fork](https://github.com/adotinthevoid/ropey)
-- A renderer for the text. It should be usable by anyone wanting to build a text editor, reguardless of UI component
-
-Instead all it seeks to do is implement the layer between keypresses and the rope.
-- Undo/Redo
-- Select
-- Multicurser
-
-*/
-
 use ropey::Rope;
+
+use druid::Data;
 
 use std::{cmp::min, fmt, io};
 
-#[cfg_attr(feature = "druid", derive(druid::Data))]
-#[derive(Clone, Debug, Default)]
-/// The editable text item
-/// ```
-/// # use textedit::EditableText;
-/// let mut text = EditableText::new();
-/// text.insert('a');
-/// text.insert('b');
-/// text.insert('c');
-/// assert_eq!(&text.to_string(), "abc");
-/// text.left();
-/// text.delete();
-/// assert_eq!(&text.to_string(), "ac");
-/// text.insert('世');
-/// text.insert('界');
-/// assert_eq!(&text.to_string(), "a世界c");
-/// text.delete();
-/// assert_eq!(&text.to_string(), "a世c");
-/// ```
-pub struct EditableText {
+#[derive(Clone, Debug, Default, Data)]
+pub struct Buffer {
     text: Rope,
     cursur: usize,
 }
 
-impl EditableText {
+impl Buffer {
     /// Create a empty `EditableText`.
     pub fn new() -> Self {
         Self {
@@ -107,7 +75,7 @@ impl EditableText {
     }
 }
 
-impl fmt::Display for EditableText {
+impl fmt::Display for Buffer {
     /// Get the text as a string.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.text)
@@ -120,7 +88,7 @@ mod tests {
 
     #[test]
     fn omni() {
-        let mut text = EditableText::new();
+        let mut text = Buffer::new();
         text.insert('a');
         text.insert('b');
         text.insert('c');
