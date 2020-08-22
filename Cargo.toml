@@ -1,10 +1,9 @@
 [workspace]
 members = [
     "wingspan",
-    "textarea",
-    "textedit",
+    "wingspan-buffer",
 ]
 
-
-[profile.dev.package.backtrace]
-opt-level = 3
+[patch.crates-io]
+druid = { git = "https://github.com/linebender/druid", rev = "61c9882" }
+ropey = { git = "https://github.com/aDotInTheVoid/ropey/", branch = "omicoron" }

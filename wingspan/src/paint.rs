@@ -1,59 +1,35 @@
-/// Code for painting the [`TextArea`].
-///
-/// This is the part that is concerned with pushing pixels to the screen.
-/// It's called via the `paint` method in `druid::Widget`
-use crate::TextArea;
-
-use textedit::EditableText;
-
 use druid::{
     kurbo::Line,
     piet::{
-        FontBuilder, PietText, PietTextLayout, Text, TextLayout,
+        FontFamily, PietText, PietTextLayout, Text, TextAttribute, TextLayout,
         TextLayoutBuilder,
     },
     theme, Env, PaintCtx, Point, RenderContext,
 };
 use std::cmp::min;
 
-impl TextArea {
-    /// Main entry point to the paint system.
-    ///
-    /// The function signature is that of `druid::Widget::paint`, put it's
-    /// placed in a seperate function so the lib.rs can be smaller.
+use crate::widget::EditWidget;
+use wingspan_buffer::Buffer;
+
+impl EditWidget {
     pub(crate) fn paint_internal(
         &mut self,
         ctx: &mut PaintCtx<'_, '_, '_>,
-        data: &EditableText,
+        data: &Buffer,
         env: &Env,
     ) {
-        ///////////////////////////////////////////////////////////////////////
-        //// Preamble: Pull random Vars
-        ///////////////////////////////////////////////////////////////////////
         let global_rope = data.rope();
 
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
         let background_color = env.get(theme::BACKGROUND_LIGHT);
-        let text_color = env.get(theme::LABEL_COLOR);
+        let _text_color = env.get(theme::LABEL_COLOR);
         let cursor_color = env.get(theme::CURSOR_COLOR);
 
-        ///////////////////////////////////////////////////////////////////////
-        //// Background & Padding
-        ///////////////////////////////////////////////////////////////////////
-
-        // First we paint the background
-        // This is so we can add padding later, see druid::widget::TextBox for
-        // more
         let clip_rect = ctx.size().to_rect();
         ctx.fill(clip_rect, &background_color);
 
-        // Move into a save, and render most of the stuff inside of it.
         ctx.with_save(|rc| {
             rc.clip(clip_rect);
-
-            ///////////////////////////////////////////////////////////////////////
-            //// Local Rope Extraction
-            ///////////////////////////////////////////////////////////////////////
 
             // TODO: Log an error if we use the default.
             // This in the top to top spacing
@@ -92,9 +68,7 @@ impl TextArea {
             // local_vscroll is how far up we need to move the text.
             let pixels_removed = lines_to_remove as f64 * line_spacing;
             let local_vscroll = self.vscroll - pixels_removed;
-            // TODO: Figure out where this 0.8 comes from
-            let text_height = font_size * 0.8;
-            let text_pos = Point::new(0.0, text_height - local_vscroll);
+            let text_pos = Point::new(0.0, 0. - local_vscroll);
 
             // Extract the onscrean rope
             let text_start_idx = global_rope.line_to_char(lines_to_remove);
@@ -104,18 +78,10 @@ impl TextArea {
             ));
             let local_rope = global_rope.slice(text_start_idx..text_end_idx);
 
-            ///////////////////////////////////////////////////////////////////
-            //// Text Layout
-            ///////////////////////////////////////////////////////////////////
-
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
             let text_layout =
                 self.get_layout(&mut rc.text(), &local_rope.to_string(), env);
-
-            ///////////////////////////////////////////////////////////////////
-            //// Curser
-            ///////////////////////////////////////////////////////////////////
 
             // Bytewise index of the curser position in the local rope
             // If this checked_sub returns None, it means the curser is above
@@ -135,63 +101,56 @@ impl TextArea {
                     && local_lineno < text_layout.line_count()
                 {
                     // Now we get the position of the curser in the text
-                    if let Some(pos) =
-                        text_layout.hit_test_text_position(text_byte_idx)
+                    let pos = text_layout.hit_test_text_position(text_byte_idx);
+
+                    let local_lineno = local_lineno as f64;
+
+                    // https://github.com/linebender/druid/issues/1105
+                    // pos.y isn't platform independent, so we use this
+                    // instead.
+                    let top_y = local_lineno * line_spacing - local_vscroll;
+                    let bottom_y = top_y + font_size;
+                    let mut x = pos.point.x;
+
+                    // If we're on a newline, the x is from the previous
+                    // line. TODO: Index the local rope instead
+                    if global_rope
+                        .chars_at(data.curser().saturating_sub(1))
+                        .next()
+                        == Some('\n')
                     {
-                        let local_lineno = local_lineno as f64;
-
-                        // https://github.com/linebender/druid/issues/1105
-                        // pos.y isn't platform independent, so we use this
-                        // instead.
-                        let top_y = local_lineno * line_spacing - local_vscroll;
-                        let bottom_y = top_y + font_size;
-                        let mut x = pos.point.x;
-
-                        // If we're on a newline, the x is from the previous
-                        // line. TODO: Index the local rope instead
-                        if global_rope
-                            .chars_at(data.curser().saturating_sub(1))
-                            .next()
-                            == Some('\n')
-                        {
-                            x = 1.0;
-                        }
-
-                        ///////////////////////////////////////////////////
-                        //// Drawing
-                        ///////////////////////////////////////////////////
-
-                        let top = Point::new(x, top_y);
-                        let bottom = Point::new(x, bottom_y);
-                        let line = Line::new(top, bottom);
-                        // TODO: Make width configurable
-                        rc.stroke(line, &cursor_color, 1.0);
+                        x = 1.0;
                     }
+
+                    let top = Point::new(x, top_y);
+                    let bottom = Point::new(x, bottom_y);
+                    let line = Line::new(top, bottom);
+                    // TODO: Make width configurable
+                    rc.stroke(line, &cursor_color, 1.0);
                 }
             }
-            rc.draw_text(&text_layout, text_pos, &text_color);
+            rc.draw_text(&text_layout, text_pos);
         });
     }
 
     fn get_layout(
         &self,
-        piet_text: &mut PietText<'_>,
+        piet_text: &mut PietText,
         text: &str,
         env: &Env,
     ) -> PietTextLayout {
-        //TODO: allow customisable fonts and sizes
+        let font_name = env.get(theme::FONT_NAME);
         let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        let font = env.get(theme::FONT_NAME);
+        let default_colors = env.get(theme::LABEL_COLOR);
 
-        // TODO: caching of both the format and the layout
         let font = piet_text
-            // While druid uses the "toy" api, this is fine
-            .new_font_by_name(font, font_size)
-            .build()
-            .unwrap();
+            .font_family(font_name)
+            .unwrap_or(FontFamily::SYSTEM_UI);
 
         piet_text
-            .new_text_layout(&font, &text.to_string(), std::f64::INFINITY)
+            .new_text_layout(&text.to_string())
+            .font(font, font_size)
+            .default_attribute(TextAttribute::ForegroundColor(default_colors))
             .build()
             .unwrap()
     }
@@ -201,12 +160,12 @@ impl TextArea {
     // now.
     fn get_line_spacing(
         &self,
-        piet_text: &mut PietText<'_>,
+        piet_text: &mut PietText,
         env: &Env,
     ) -> Option<f64> {
         let layout = self.get_layout(piet_text, "12\n45", env);
-        let top = layout.hit_test_text_position(1)?.point.y;
-        let bottom = layout.hit_test_text_position(4)?.point.y;
+        let top = layout.hit_test_text_position(1).point.y;
+        let bottom = layout.hit_test_text_position(4).point.y;
         Some(bottom - top)
     }
 }
