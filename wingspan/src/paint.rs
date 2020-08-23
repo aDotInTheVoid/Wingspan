@@ -148,7 +148,7 @@ impl EditWidget {
             .unwrap_or(FontFamily::SYSTEM_UI);
 
         piet_text
-            .new_text_layout(&text.to_string())
+            .new_text_layout(text)
             .font(font, font_size)
             .default_attribute(TextAttribute::ForegroundColor(default_colors))
             .build()

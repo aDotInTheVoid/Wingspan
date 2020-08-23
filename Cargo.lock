@@ -1652,6 +1652,7 @@ name = "wingspan"
 version = "0.1.0"
 dependencies = [
  "druid",
+ "tempfile",
  "wingspan-buffer",
 ]
 

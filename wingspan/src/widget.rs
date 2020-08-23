@@ -113,7 +113,14 @@ impl Widget<Buffer> for EditWidget {
 #[cfg(test)]
 mod test {
     use super::*;
-    use druid::{tests::harness::Harness, WidgetExt};
+    use druid::{
+        keyboard_types::Key, tests::harness::Harness, KeyEvent, WidgetExt,
+    };
+    use std::{
+        fs::File,
+        io::{self, BufReader, Read},
+        path::PathBuf,
+    };
     #[test]
     fn default_state_is_empty() {
         let widget = EditWidget { vscroll: 0.0 }.with_id(WidgetId::next());
@@ -122,5 +129,153 @@ mod test {
             harness.send_initial_events();
             assert_eq!(harness.data().to_string(), "");
         });
+    }
+
+    #[test]
+    fn open_sonnet_18() -> io::Result<()> {
+        let root = EditWidget { vscroll: 0.0 }.with_id(WidgetId::next());
+        let data = Buffer::from_reader(BufReader::new(File::open(
+            "./texts/sonnet18.txt",
+        )?))?;
+        Harness::create_simple(data, root, |harness| {
+            harness.send_initial_events();
+            assert_eq!(
+                harness.data().to_string(),
+                include_str!("../texts/sonnet18.txt")
+            )
+        });
+        Ok(())
+    }
+
+    #[test]
+    fn open_macbeth() -> io::Result<()> {
+        let root = EditWidget { vscroll: 0.0 }.with_id(WidgetId::next());
+        let data = Buffer::from_reader(BufReader::new(File::open(
+            "./texts/macbeth.txt",
+        )?))?;
+        Harness::create_simple(data, root, |harness| {
+            harness.send_initial_events();
+            assert_eq!(
+                harness.data().to_string(),
+                include_str!("../texts/macbeth.txt")
+            )
+        });
+        Ok(())
+    }
+
+    #[test]
+    fn open_shakespeare() -> io::Result<()> {
+        let root = EditWidget { vscroll: 0.0 }.with_id(WidgetId::next());
+        let data = Buffer::from_reader(BufReader::new(File::open(
+            "./texts/shakespeare.txt",
+        )?))?;
+        Harness::create_simple(data, root, |harness| {
+            harness.send_initial_events();
+            harness.paint();
+            assert_eq!(
+                harness.data().to_string(),
+                include_str!("../texts/shakespeare.txt")
+            )
+        });
+        Ok(())
+    }
+    #[test]
+    fn sonnet_img() -> io::Result<()> {
+        test_image_open("sonnet1", "./texts/sonnet18.txt", |_| {})
+    }
+    #[test]
+    fn sonnet_img_move() -> io::Result<()> {
+        test_image_open("sonnet2", "./texts/sonnet18.txt", |harness| {
+            let mut ke: KeyEvent = Default::default();
+            ke.key = Key::Character("a".to_owned());
+            harness.event(Event::KeyDown(ke));
+        })
+    }
+
+    #[test]
+    fn shakespeare_scroll() -> io::Result<()> {
+        Ok(test_image_check(
+            "shakespere_scroll",
+            |wid| {
+                wid.vscroll = 100.0;
+            },
+            Buffer::from_reader(BufReader::new(File::open(
+                "./texts/shakespeare.txt",
+            )?))?,
+            |harness| {
+                let mut ke: KeyEvent = Default::default();
+                ke.key = Key::ArrowRight;
+                for _ in 0..300 {
+                    harness.event(Event::KeyDown(ke.clone()))
+                }
+                ke.key = Key::Backspace;
+                for _ in 0..10 {
+                    harness.event(Event::KeyDown(ke.clone()))
+                }
+                ke.key = Key::Character("x".to_owned());
+                for _ in 0..10 {
+                    harness.event(Event::KeyDown(ke.clone()))
+                }
+            },
+        ))
+    }
+
+    fn test_image_open(
+        name: &str,
+        text_file: &str,
+        harness_events: impl FnMut(&mut Harness<Buffer>),
+    ) -> io::Result<()> {
+        test_image_check(
+            name,
+            |_| {},
+            Buffer::from_reader(BufReader::new(File::open(text_file)?))?,
+            harness_events,
+        );
+        Ok(())
+    }
+
+    fn test_image_check(
+        name: &str,
+        mut widget_setup: impl FnMut(&mut EditWidget),
+        data: Buffer,
+        mut harness_events: impl FnMut(&mut Harness<Buffer>),
+    ) {
+        let mut root = Default::default();
+        widget_setup(&mut root);
+        Harness::create_with_render(
+            data,
+            root,
+            Size::new(400.0, 400.0),
+            |harness| {
+                harness.send_initial_events();
+                harness.just_layout();
+                harness_events(harness);
+                harness.paint()
+            },
+            |render| {
+                let mut name = name.to_owned();
+                name.push_str(".png");
+                let mut file = PathBuf::from("./test_images");
+                file.push(std::env::consts::OS);
+                file.push(name);
+                if std::env::var("WINGSPAN_UPDATE_IMAGES") == Ok("1".to_owned())
+                {
+                    // Save the png
+                    render.into_png(file).unwrap();
+                } else {
+                    let mut true_image = File::open(file).unwrap();
+                    let false_image = tempfile::NamedTempFile::new().unwrap();
+                    render.into_png(false_image.path()).unwrap();
+                    let mut true_bytes = Vec::new();
+                    true_image.read_to_end(&mut true_bytes).unwrap();
+                    let mut false_bytes = Vec::new();
+                    false_image
+                        .as_file()
+                        .read_to_end(&mut false_bytes)
+                        .unwrap();
+                    assert_eq!(true_bytes, false_bytes);
+                }
+            },
+        )
     }
 }
