@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::io::prelude::*;
 
-
 fn main() -> Result<(), Box<dyn Error>> {
     let resp = ""; //include_str!("../log.txt");
     let mut goods = vec![];
@@ -20,10 +19,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     assert_eq!(goods.len(), bads.len());
     let mut i = 0;
     for (good, bad) in goods.iter().zip(bads.iter()).map(|(&x, &y)| (x, y)) {
-        let good_bytes = &good[good.find('[').unwrap() + 1..good.find(']').unwrap()];
-        let bad_bytes = &bad[bad.find('[').unwrap() + 1..bad.find(']').unwrap()];
-        let good_vec: Vec<u8> = good_bytes.split(", ").map(|x| x.parse().unwrap()).collect();
-        let bad_vec: Vec<u8> = bad_bytes.split(", ").map(|x| x.parse().unwrap()).collect();
+        let good_bytes =
+            &good[good.find('[').unwrap() + 1..good.find(']').unwrap()];
+        let bad_bytes =
+            &bad[bad.find('[').unwrap() + 1..bad.find(']').unwrap()];
+        let good_vec: Vec<u8> =
+            good_bytes.split(", ").map(|x| x.parse().unwrap()).collect();
+        let bad_vec: Vec<u8> =
+            bad_bytes.split(", ").map(|x| x.parse().unwrap()).collect();
         std::fs::File::create(format!("./good{}.png", i))
             .unwrap()
             .write_all(&good_vec)
