@@ -18,6 +18,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
         rust: [stable, beta, nightly]
+      # If one of the OS's break, I want to know which
+      fail-fast: false
     steps:
     
     # Get rust
@@ -112,6 +114,7 @@ jobs:
     strategy:
       matrix:
         dir: [wingspan, wingspan-buffer]
+      fail-fast: false
     steps: 
       - name: checkout
         uses: actions/checkout@v1
