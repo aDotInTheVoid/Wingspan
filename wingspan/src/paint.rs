@@ -2,7 +2,7 @@ use druid::{
     kurbo::Line,
     piet::{
         FontFamily, PietText, PietTextLayout, Text, TextAttribute, TextLayout,
-        TextLayoutBuilder,
+        TextLayoutBuilder, FontWeight,
     },
     Env, PaintCtx, Point, RenderContext,
 };
@@ -145,6 +145,7 @@ impl EditWidget {
             .new_text_layout(text)
             .font(font, font_size)
             .default_attribute(TextAttribute::ForegroundColor(default_colors))
+            .default_attribute(TextAttribute::Weight(FontWeight::MEDIUM))
             .build()
             .unwrap()
     }
