@@ -2,9 +2,9 @@ use druid::{
     kurbo::Line,
     piet::{
         FontFamily, PietText, PietTextLayout, Text, TextAttribute, TextLayout,
-        TextLayoutBuilder,
+        TextLayoutBuilder, FontWeight,
     },
-    theme, Env, PaintCtx, Point, RenderContext,
+    Env, PaintCtx, Point, RenderContext,
 };
 use std::cmp::min;
 
@@ -16,14 +16,13 @@ impl EditWidget {
         &mut self,
         ctx: &mut PaintCtx<'_, '_, '_>,
         data: &Buffer,
-        env: &Env,
+        _env: &Env,
     ) {
         let global_rope = data.rope();
 
-        let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        let background_color = env.get(theme::BACKGROUND_LIGHT);
-        let _text_color = env.get(theme::LABEL_COLOR);
-        let cursor_color = env.get(theme::CURSOR_COLOR);
+        let font_size = 14.0;
+        let background_color = druid::piet::Color::BLACK;
+        let cursor_color = druid::piet::Color::WHITE;
 
         let clip_rect = ctx.size().to_rect();
         ctx.fill(clip_rect, &background_color);
@@ -34,7 +33,7 @@ impl EditWidget {
             // TODO: Log an error if we use the default.
             // This in the top to top spacing
             let line_spacing =
-                self.get_line_spacing(&mut rc.text(), env).unwrap_or(19.0);
+                self.get_line_spacing(&mut rc.text()).unwrap_or(19.0);
 
             // The maximum number of lines that can on the screen.
             // We round up, as we want to include lines partialy on the screen
@@ -81,7 +80,7 @@ impl EditWidget {
             // Next we generate the `text_layout`, which is the text + the
             // formatting (I think)
             let text_layout =
-                self.get_layout(&mut rc.text(), &local_rope.to_string(), env);
+                self.get_layout(&mut rc.text(), &local_rope.to_string());
 
             // Bytewise index of the curser position in the local rope
             // If this checked_sub returns None, it means the curser is above
@@ -137,20 +136,16 @@ impl EditWidget {
         &self,
         piet_text: &mut PietText,
         text: &str,
-        env: &Env,
     ) -> PietTextLayout {
-        let font_name = env.get(theme::FONT_NAME);
-        let font_size = env.get(theme::TEXT_SIZE_NORMAL);
-        let default_colors = env.get(theme::LABEL_COLOR);
-
-        let font = piet_text
-            .font_family(font_name)
-            .unwrap_or(FontFamily::SYSTEM_UI);
+        let font_size = 14.0;
+        let default_colors = druid::piet::Color::WHITE;
+        let font = FontFamily::MONOSPACE;
 
         piet_text
             .new_text_layout(&text.to_string())
             .font(font, font_size)
             .default_attribute(TextAttribute::ForegroundColor(default_colors))
+            .default_attribute(TextAttribute::Weight(FontWeight::MEDIUM))
             .build()
             .unwrap()
     }
@@ -161,9 +156,8 @@ impl EditWidget {
     fn get_line_spacing(
         &self,
         piet_text: &mut PietText,
-        env: &Env,
     ) -> Option<f64> {
-        let layout = self.get_layout(piet_text, "12\n45", env);
+        let layout = self.get_layout(piet_text, "12\n45");
         let top = layout.hit_test_text_position(1).point.y;
         let bottom = layout.hit_test_text_position(4).point.y;
         Some(bottom - top)
