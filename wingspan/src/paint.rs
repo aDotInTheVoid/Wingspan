@@ -1,8 +1,8 @@
 use druid::{
     kurbo::Line,
     piet::{
-        FontFamily, PietText, PietTextLayout, Text, TextAttribute, TextLayout,
-        TextLayoutBuilder, FontWeight,
+        FontFamily, FontWeight, PietText, PietTextLayout, Text, TextAttribute,
+        TextLayout, TextLayoutBuilder,
     },
     Env, PaintCtx, Point, RenderContext,
 };
@@ -153,10 +153,7 @@ impl EditWidget {
     // Line spacing is the difference between the top of one line and the top of
     // another. Their's probably a better way to get it, but this works for
     // now.
-    fn get_line_spacing(
-        &self,
-        piet_text: &mut PietText,
-    ) -> Option<f64> {
+    fn get_line_spacing(&self, piet_text: &mut PietText) -> Option<f64> {
         let layout = self.get_layout(piet_text, "12\n45");
         let top = layout.hit_test_text_position(1).point.y;
         let bottom = layout.hit_test_text_position(4).point.y;
