@@ -30,10 +30,7 @@ impl EditWidget {
         ctx.with_save(|rc| {
             rc.clip(clip_rect);
 
-            // TODO: Log an error if we use the default.
-            // This in the top to top spacing
-            let line_spacing =
-                self.get_line_spacing(&mut rc.text()).unwrap_or(19.0);
+            let line_spacing = self.get_line_spacing(&mut rc.text());
 
             // The maximum number of lines that can on the screen.
             // We round up, as we want to include lines partialy on the screen
@@ -153,10 +150,10 @@ impl EditWidget {
     // Line spacing is the difference between the top of one line and the top of
     // another. Their's probably a better way to get it, but this works for
     // now.
-    fn get_line_spacing(&self, piet_text: &mut PietText) -> Option<f64> {
+    fn get_line_spacing(&self, piet_text: &mut PietText) -> f64 {
         let layout = self.get_layout(piet_text, "12\n45");
         let top = layout.hit_test_text_position(1).point.y;
         let bottom = layout.hit_test_text_position(4).point.y;
-        Some(bottom - top)
+        bottom - top
     }
 }
