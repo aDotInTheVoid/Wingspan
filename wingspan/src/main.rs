@@ -1,7 +1,7 @@
 mod paint;
 mod widget;
 
-use druid::widget::{Flex, TextBox};
+use druid::widget::{Flex, Scroll, TextBox};
 use druid::{AppLauncher, Data, Lens, WidgetExt, WindowDesc};
 use widget::EditWidget;
 use wingspan_buffer::Buffer;
@@ -14,7 +14,9 @@ fn main() {
     }
 
     // let my_editor = EditWidget::default().lens(Appstate::my_buf);
-    let left = TextBox::new().lens(Appstate::left).expand_width();
+    let left = Scroll::new(TextBox::new().expand_width())
+        .vertical()
+        .lens(Appstate::left);
     let right = EditWidget::default().lens(Appstate::right).expand_width();
 
     let app = || {
