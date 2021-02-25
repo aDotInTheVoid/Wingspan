@@ -4,6 +4,6 @@ members = [
     "wingspan-buffer",
 ]
 
-[patch.crates-io]
-druid = { git = "https://github.com/linebender/druid", rev = "1e28dcf" }
-ropey = { git = "https://github.com/aDotInTheVoid/ropey/", branch = "omicoron" }
+# [patch.crates-io]
+# druid = "0.7"
+# ropey = { git = "https://github.com/aDotInTheVoid/ropey/", branch = "omicoron" }

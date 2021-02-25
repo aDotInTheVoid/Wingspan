@@ -142,9 +142,9 @@ impl EditWidget {
         let font = FontFamily::MONOSPACE;
 
         piet_text
-            .new_text_layout(&text.to_string())
+            .new_text_layout(text.to_string())
             .font(font, font_size)
-            .default_attribute(TextAttribute::ForegroundColor(default_colors))
+            .default_attribute(TextAttribute::TextColor(default_colors))
             .default_attribute(TextAttribute::Weight(FontWeight::MEDIUM))
             .build()
             .unwrap()
