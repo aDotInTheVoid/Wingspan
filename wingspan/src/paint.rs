@@ -30,8 +30,6 @@ impl EditWidget {
     ) {
         let global_rope = data.rope();
 
-        // let font_size = 14.0;
-
         let clip_rect = ctx.size().to_rect();
         ctx.fill(clip_rect, &BACKGROUND);
 
