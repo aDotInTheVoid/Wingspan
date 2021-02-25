@@ -8,6 +8,16 @@ use druid::{
 };
 use std::cmp::min;
 
+use druid::piet::Color;
+
+const BACKGROUND: Color = Color::rgb8(0x28, 0x28, 0x28);
+const FORGROUND: Color = Color::rgb8(0xc5, 0xc8, 0xc6);
+const FONT: FontFamily = FontFamily::MONOSPACE;
+const FONT_SIZE: f64 = 14.0;
+const WEIGHT: FontWeight = FontWeight::MEDIUM;
+const CURSER_WIDTH: f64 = 3.0;
+const CURSER_COLOR: Color = Color::rgb8(0xfe, 0xfd, 0xbf);
+
 use crate::widget::EditWidget;
 use wingspan_buffer::Buffer;
 
@@ -20,12 +30,10 @@ impl EditWidget {
     ) {
         let global_rope = data.rope();
 
-        let font_size = 14.0;
-        let background_color = druid::piet::Color::BLACK;
-        let cursor_color = druid::piet::Color::WHITE;
+        // let font_size = 14.0;
 
         let clip_rect = ctx.size().to_rect();
-        ctx.fill(clip_rect, &background_color);
+        ctx.fill(clip_rect, &BACKGROUND);
 
         ctx.with_save(|rc| {
             rc.clip(clip_rect);
@@ -105,7 +113,7 @@ impl EditWidget {
                     // pos.y isn't platform independent, so we use this
                     // instead.
                     let top_y = local_lineno * line_spacing - local_vscroll;
-                    let bottom_y = top_y + font_size;
+                    let bottom_y = top_y + FONT_SIZE;
                     let mut x = pos.point.x;
 
                     // If we're on a newline, the x is from the previous
@@ -122,7 +130,7 @@ impl EditWidget {
                     let bottom = Point::new(x, bottom_y);
                     let line = Line::new(top, bottom);
                     // TODO: Make width configurable
-                    rc.stroke(line, &cursor_color, 1.0);
+                    rc.stroke(line, &CURSER_COLOR, CURSER_WIDTH);
                 }
             }
             rc.draw_text(&text_layout, text_pos);
@@ -134,15 +142,11 @@ impl EditWidget {
         piet_text: &mut PietText,
         text: &str,
     ) -> PietTextLayout {
-        let font_size = 14.0;
-        let default_colors = druid::piet::Color::WHITE;
-        let font = FontFamily::MONOSPACE;
-
         piet_text
             .new_text_layout(text.to_string())
-            .font(font, font_size)
-            .default_attribute(TextAttribute::TextColor(default_colors))
-            .default_attribute(TextAttribute::Weight(FontWeight::MEDIUM))
+            .font(FONT, FONT_SIZE)
+            .default_attribute(TextAttribute::TextColor(FORGROUND))
+            .default_attribute(TextAttribute::Weight(WEIGHT))
             .build()
             .unwrap()
     }
