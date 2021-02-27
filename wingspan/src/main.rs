@@ -6,6 +6,8 @@ use druid::{AppLauncher, Data, Lens, WidgetExt, WindowDesc};
 use widget::EditWidget;
 use wingspan_buffer::Buffer;
 
+const LONG_TEXT: &str = include_str!("../../assets/long_log.txt");
+
 fn main() {
     #[derive(Clone, Data, Lens)]
     struct Appstate {
@@ -28,8 +30,8 @@ fn main() {
     let window = WindowDesc::new(app);
 
     let state = Appstate {
-        left: String::from(include_str!("main.rs")),
-        right: Buffer::new_text(include_str!("main.rs")),
+        left: String::from(LONG_TEXT),
+        right: Buffer::new_text(LONG_TEXT),
     };
 
     AppLauncher::with_window(window)
