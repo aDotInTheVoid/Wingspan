@@ -1,3 +1,4 @@
+use druid::piet::Color;
 use druid::{
     kurbo::Line,
     piet::{
@@ -7,8 +8,6 @@ use druid::{
     Env, PaintCtx, Point, RenderContext,
 };
 use std::cmp::min;
-
-use druid::piet::Color;
 
 const BACKGROUND: Color = Color::rgb8(0x28, 0x28, 0x28);
 const FORGROUND: Color = Color::rgb8(0xc5, 0xc8, 0xc6);
@@ -85,18 +84,26 @@ impl EditWidget {
             let text_layout =
                 self.get_layout(&mut rc.text(), &local_rope.to_string());
 
+            // We move the curser here, as we know things about positioning now
+            // that we do not know about in `event`
+            if let Some(mut click_pos) = self.move_mouse_to.take() {
+                click_pos.y += local_vscroll;
+                let pos_in_local = text_layout.hit_test_point(click_pos);
+                data.set_cursor(text_start_idx + pos_in_local.idx);
+            }
+
             // Bytewise index of the curser position in the local rope
             // If this checked_sub returns None, it means the curser is above
             // the local rope.
             if let Some(text_byte_idx) = global_rope
-                .char_to_byte(data.curser())
+                .char_to_byte(data.cursor())
                 .checked_sub(global_rope.char_to_byte(text_start_idx))
             {
                 let local_len = local_rope.len_bytes();
 
                 // The line number in the local rope.
                 let local_lineno =
-                    global_rope.char_to_line(data.curser()) - lines_to_remove;
+                    global_rope.char_to_line(data.cursor()) - lines_to_remove;
 
                 // Check the curser is onscreen
                 if local_len >= text_byte_idx
@@ -117,7 +124,7 @@ impl EditWidget {
                     // If we're on a newline, the x is from the previous
                     // line. TODO: Index the local rope instead
                     if global_rope
-                        .chars_at(data.curser().saturating_sub(1))
+                        .chars_at(data.cursor().saturating_sub(1))
                         .next()
                         == Some('\n')
                     {

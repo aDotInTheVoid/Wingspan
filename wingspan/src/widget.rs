@@ -1,9 +1,11 @@
 use druid::widget::prelude::*;
+use druid::Point;
 use wingspan_buffer::Buffer;
 
 #[derive(Default, Clone, Copy)]
 pub struct EditWidget {
     pub vscroll: f64,
+    pub move_mouse_to: Option<Point>,
 }
 
 impl Widget<Buffer> for EditWidget {
@@ -58,6 +60,11 @@ impl Widget<Buffer> for EditWidget {
                 // TODO: Make this feel native (acceleration, etc)
                 let vscroll = self.vscroll + wheel_delta.y;
                 self.vscroll = if vscroll < 0. { 0. } else { vscroll };
+                ctx.request_paint();
+            }
+            Event::MouseDown(m) => {
+                // TODO: Less of a hack
+                self.move_mouse_to = Some(m.pos);
                 ctx.request_paint();
             }
             _ => {}
