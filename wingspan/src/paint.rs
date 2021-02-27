@@ -15,7 +15,7 @@ const FORGROUND: Color = Color::rgb8(0xc5, 0xc8, 0xc6);
 const FONT: FontFamily = FontFamily::MONOSPACE;
 const FONT_SIZE: f64 = 14.0;
 const WEIGHT: FontWeight = FontWeight::MEDIUM;
-const CURSER_WIDTH: f64 = 3.0;
+const CURSER_WIDTH: f64 = 2.;
 const CURSER_COLOR: Color = Color::rgb8(0xfe, 0xfd, 0xbf);
 
 use crate::widget::EditWidget;
@@ -121,7 +121,7 @@ impl EditWidget {
                         .next()
                         == Some('\n')
                     {
-                        x = 1.0;
+                        x = CURSER_WIDTH / 2.0;
                     }
 
                     let top = Point::new(x, top_y);
