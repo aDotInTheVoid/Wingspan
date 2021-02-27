@@ -59,6 +59,29 @@ impl Buffer {
         self.cursur = self.cursur.saturating_sub(1);
     }
 
+    pub fn up(&mut self) {
+        // TODO: Test + edge cases
+        let lineno = self.rope().char_to_line(self.cursur);
+        let start_of_line = self.rope().line_to_char(lineno);
+        let into_this_line = self.cursur - start_of_line;
+
+        // TODO: Case where we need to move back the curser
+        let new_curser = self.rope().line_to_char(lineno.saturating_sub(1)) + into_this_line;
+        self.cursur = new_curser;
+
+    }
+
+    pub fn down(&mut self) {
+        // TODO: Test + edge cases, merge_with_up
+        let lineno = self.rope().char_to_line(self.cursur);
+        let start_of_line = self.rope().line_to_char(lineno);
+        let into_this_line = self.cursur - start_of_line;
+
+        let new_curser = self.rope().line_to_char(lineno + 1) + into_this_line;
+        self.cursur = new_curser;
+
+    }
+
     pub fn rope(&self) -> &Rope {
         &self.text
     }

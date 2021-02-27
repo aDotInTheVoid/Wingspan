@@ -26,6 +26,8 @@ impl Widget<Buffer> for EditWidget {
                 match &key_event.key {
                     ArrowLeft => data.left(),
                     ArrowRight => data.right(),
+                    ArrowUp => data.up(),
+                    ArrowDown => data.down(),
 
                     Delete | Backspace => data.delete(),
 
