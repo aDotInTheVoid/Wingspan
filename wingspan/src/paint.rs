@@ -41,7 +41,8 @@ impl EditWidget {
             // We round up, as we want to include lines partialy on the screen
             let max_lines_onscreen = (rc.size().height / line_spacing).ceil();
             debug_assert!(max_lines_onscreen >= 0.0);
-            let max_lines_onscreen = max_lines_onscreen as usize;
+            // Add one, so the bottom always scrolls in smoothly
+            let max_lines_onscreen = max_lines_onscreen as usize + 1;
 
             // Ensure their is text on screen
             match global_rope.len_lines().checked_sub(max_lines_onscreen) {

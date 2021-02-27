@@ -22,12 +22,12 @@ fn main() {
     let right = EditWidget::default().lens(Appstate::right).expand_width();
 
     let app = || {
-        Flex::row()
+        Flex::column()
             .with_flex_child(left, 1.0)
             .with_flex_child(right, 1.0)
     };
 
-    let window = WindowDesc::new(app);
+    let window = WindowDesc::new(app).window_size((1000.0, 800.0));
 
     let state = Appstate {
         left: String::from(LONG_TEXT),
