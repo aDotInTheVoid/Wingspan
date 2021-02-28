@@ -90,6 +90,7 @@ impl EditWidget {
             if let Some(mut click_pos) = self.move_mouse_to.take() {
                 click_pos.y += local_vscroll;
                 let pos_in_local = text_layout.hit_test_point(click_pos);
+                // FIXME: idx is in grapheme clusters, not chars
                 data.set_cursor(text_start_idx + pos_in_local.idx);
             }
 
